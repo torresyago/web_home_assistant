@@ -99,6 +99,48 @@ Dockerfile        Build multi-stage: compila el frontend y lo sirve desde el bac
 docker-compose.yml
 ```
 
+## Seguridad
+
+La app está pensada para exponerse detrás de un reverse proxy (nginx, NPM, etc.) que termine TLS. Las medidas de seguridad previstas son:
+
+- **Certificado de cliente (mTLS)**: el proxy puede exigir un certificado de cliente (ej. FNMT) y pasar el número de serie en la cabecera `X-SSL-Client-Serial` (y opcionalmente `X-SSL-Client-Verify`). La app valida esa cabecera y, si `ALLOWED_CERT_SERIALS` tiene valores, comprueba además que el serial esté en la lista blanca — doble capa (proxy + app) por si el proxy cambia de configuración.
+- **Login usuario/contraseña** (`ADMIN_USER`/`ADMIN_PASSWORD`) como alternativa o complemento al certificado, para acceder también desde clientes que no puedan presentar uno.
+- **Webhook con API key propia** (`WEBHOOK_API_KEY`): la ruta `/api/webhook/:deviceId` está pensada para integraciones externas (Atajos de iOS, automatizaciones) que no pueden hacer mTLS. Se autentica solo con una cabecera `X-Api-Key`, comparada con [`crypto.timingSafeEqual`](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b) para evitar ataques de temporización.
+- **Cuarentena por fuerza bruta**: si una IP falla la API key del webhook 5 veces en 5 minutos, queda bloqueada 15 minutos (`429 Too Many Requests`), independientemente de si luego usa la key correcta. Ver [`server/src/middleware/quarantine.js`](server/src/middleware/quarantine.js).
+- **Rate limiting a nivel de proxy**: se recomienda añadir un `limit_req` en nginx sobre la ruta del webhook (ver ejemplo más abajo) como capa adicional contra flood/DDoS, independiente de la lógica de la app.
+- **Separación de dominios recomendada**: si usas certificado de cliente, sirve el panel web y el webhook en subdominios distintos — uno exigiendo mTLS estricto (`ssl_verify_client on`) y otro sin exigirlo, dedicado solo a `/api/webhook/*` con la API key. Mezclar `ssl_verify_client optional` con certificado opcional en el mismo host puede ser inestable con TLS 1.3 en algunas versiones de nginx.
+
+Ejemplo de bloque nginx para limitar la tasa de peticiones al webhook (a nivel `http`, fuera del `server`):
+
+```nginx
+limit_req_zone $binary_remote_addr zone=webhook_zone:10m rate=20r/m;
+```
+
+Y en el `server`/`location` del subdominio del webhook:
+
+```nginx
+location /api/webhook/ {
+    limit_req zone=webhook_zone burst=5 nodelay;
+    proxy_pass http://ha-things:3000;
+}
+```
+
+## Uso con Atajos de iOS
+
+El endpoint de webhook permite disparar acciones (encender, apagar, pulsar, abrir/cerrar persiana, etc.) desde la app Atajos de iOS sin necesidad de certificado de cliente:
+
+1. En el panel web, abre el menú de un dispositivo (⋮) → **"Endpoint"** → pestaña **"Webhook"**. Ahí verás la URL exacta, la cabecera `X-Api-Key` ya rellenada y el cuerpo JSON correcto para ese tipo de dispositivo.
+2. En la app Atajos, crea un atajo nuevo con la acción **"Obtener contenido de URL"**:
+   - **URL**: la mostrada en el panel (`https://tu-dominio-webhook/api/webhook/<deviceId>`).
+   - **Método**: `POST`.
+   - **Headers**: `Content-Type: application/json` y `X-Api-Key: <tu clave>`.
+   - **Request Body**: `JSON`, con el cuerpo mostrado en el panel (p. ej. `{"action":"toggle"}`).
+3. Guarda el atajo. Puedes añadirlo a la pantalla de inicio, ejecutarlo por voz con Siri, o incluirlo en una automatización (llegada a casa, hora del día, etc.).
+
+Notas:
+- La acción "Obtener contenido de URL" de Atajos **no presenta certificados de cliente** (a diferencia de Safari), por eso el webhook usa API key en vez de mTLS.
+- Si tras varios intentos con una key incorrecta el atajo empieza a fallar con `429`, tu IP está en cuarentena temporal (ver sección de Seguridad); espera 15 minutos o corrige la key.
+
 ## Notas
 
 - La app llama a la REST API de Home Assistant (`/api/states`, `/api/services/...`); no usa el WebSocket, así que el estado se actualiza por sondeo (cada 5 s) en vez de en tiempo real instantáneo.
@@ -206,6 +248,48 @@ client/           React + Vite + Tailwind frontend
 Dockerfile        Multi-stage build: builds the frontend and serves it from the backend
 docker-compose.yml
 ```
+
+### Security
+
+The app is meant to be exposed behind a reverse proxy (nginx, NPM, etc.) that terminates TLS. The security measures in place are:
+
+- **Client certificate (mTLS)**: the proxy can require a client certificate (e.g. FNMT/similar) and forward its serial number in the `X-SSL-Client-Serial` header (and optionally `X-SSL-Client-Verify`). The app validates that header and, when `ALLOWED_CERT_SERIALS` is set, additionally checks that the serial is in the allow-list — a double layer (proxy + app) in case the proxy's config changes.
+- **Username/password login** (`ADMIN_USER`/`ADMIN_PASSWORD`) as an alternative or complement to the certificate, so clients that can't present one can still get in.
+- **Webhook with its own API key** (`WEBHOOK_API_KEY`): the `/api/webhook/:deviceId` route is meant for external integrations (iOS Shortcuts, automations) that can't do mTLS. It's authenticated purely with an `X-Api-Key` header, compared using [`crypto.timingSafeEqual`](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b) to avoid timing attacks.
+- **Brute-force quarantine**: if an IP fails the webhook API key 5 times within 5 minutes, it gets blocked for 15 minutes (`429 Too Many Requests`), regardless of whether it later uses the correct key. See [`server/src/middleware/quarantine.js`](server/src/middleware/quarantine.js).
+- **Proxy-level rate limiting**: it's recommended to add an nginx `limit_req` on the webhook route (see example below) as an extra layer against flood/DDoS traffic, independent of the app's own logic.
+- **Recommended domain separation**: if you use a client certificate, serve the web panel and the webhook on separate subdomains — one strictly requiring mTLS (`ssl_verify_client on`) and another without it, dedicated only to `/api/webhook/*` with the API key. Mixing `ssl_verify_client optional` with an optional certificate on the same host can be unstable with TLS 1.3 on some nginx versions.
+
+Example nginx block to rate-limit requests to the webhook (at the `http` level, outside `server`):
+
+```nginx
+limit_req_zone $binary_remote_addr zone=webhook_zone:10m rate=20r/m;
+```
+
+And in the webhook subdomain's `server`/`location`:
+
+```nginx
+location /api/webhook/ {
+    limit_req zone=webhook_zone burst=5 nodelay;
+    proxy_pass http://ha-things:3000;
+}
+```
+
+### Using it with iOS Shortcuts
+
+The webhook endpoint lets you trigger actions (turn on/off, press, open/close a blind, etc.) from the iOS Shortcuts app without needing a client certificate:
+
+1. In the web panel, open a device's menu (⋮) → **"Endpoint"** → **"Webhook"** tab. You'll see the exact URL, the `X-Api-Key` header already filled in, and the correct JSON body for that device type.
+2. In the Shortcuts app, create a new shortcut with the **"Get Contents of URL"** action:
+   - **URL**: the one shown in the panel (`https://your-webhook-domain/api/webhook/<deviceId>`).
+   - **Method**: `POST`.
+   - **Headers**: `Content-Type: application/json` and `X-Api-Key: <your key>`.
+   - **Request Body**: `JSON`, with the body shown in the panel (e.g. `{"action":"toggle"}`).
+3. Save the shortcut. You can add it to your home screen, run it by voice with Siri, or include it in an automation (arriving home, time of day, etc.).
+
+Notes:
+- Shortcuts' "Get Contents of URL" action **does not present client certificates** (unlike Safari), which is why the webhook uses an API key instead of mTLS.
+- If the shortcut starts failing with `429` after a few attempts with a wrong key, your IP is temporarily quarantined (see the Security section); wait 15 minutes or fix the key.
 
 ### Notes
 
