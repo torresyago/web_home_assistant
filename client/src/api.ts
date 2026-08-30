@@ -1,0 +1,47 @@
+import type { Device, DeviceStates, EntityOption, Instance } from './types';
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`/api${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  if (!res.ok) {
+    let message = res.statusText;
+    try {
+      const body = await res.json();
+      message = body.error || message;
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json();
+}
+
+export const api = {
+  authStatus: () => request<{ authEnabled: boolean; authenticated: boolean }>('/auth/status'),
+  login: (username: string, password: string) =>
+    request<{ ok: true }>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  logout: () => request<{ ok: true }>('/auth/logout', { method: 'POST' }),
+
+  listInstances: () => request<Instance[]>('/instances'),
+  createInstance: (data: Partial<Instance>) =>
+    request<Instance>('/instances', { method: 'POST', body: JSON.stringify(data) }),
+  updateInstance: (id: string, data: Partial<Instance>) =>
+    request<Instance>(`/instances/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteInstance: (id: string) => request<{ ok: true }>(`/instances/${id}`, { method: 'DELETE' }),
+  testInstance: (id: string) => request<{ ok: boolean; error?: string }>(`/instances/${id}/test`, { method: 'POST' }),
+  listEntities: (id: string) => request<EntityOption[]>(`/instances/${id}/entities`),
+
+  listDevices: () => request<Device[]>('/devices'),
+  createDevice: (data: Partial<Device>) =>
+    request<Device>('/devices', { method: 'POST', body: JSON.stringify(data) }),
+  updateDevice: (id: string, data: Partial<Device>) =>
+    request<Device>(`/devices/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteDevice: (id: string) => request<{ ok: true }>(`/devices/${id}`, { method: 'DELETE' }),
+  getAllStates: () => request<DeviceStates>('/devices/states/all'),
+
+  runAction: (deviceId: string, action: string, params: Record<string, any> = {}) =>
+    request<{ ok: boolean }>(`/actions/${deviceId}`, { method: 'POST', body: JSON.stringify({ action, params }) }),
+};

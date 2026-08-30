@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-base-950 text-slate-100;
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(45, 212, 191, 0.10), transparent 40%),
+    radial-gradient(circle at 85% 20%, rgba(99, 102, 241, 0.10), transparent 40%);
+  background-attachment: fixed;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a3448;
+  border-radius: 999px;
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-lg border border-white/10 bg-base-800 px-3 py-2.5 text-sm text-slate-100 outline-none ring-accent-500/50 placeholder:text-slate-600 focus:ring-2;
+  }
+}

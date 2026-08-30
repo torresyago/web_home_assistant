@@ -1,0 +1,20 @@
+services:
+  ha-things:
+    image: ghcr.io/torresyago/web_home_assistant:latest
+    container_name: ha-things
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SESSION_SECRET=${SESSION_SECRET:-changeme-session-secret}
+      - ADMIN_USER=${ADMIN_USER:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - ALLOWED_CERT_SERIALS=${ALLOWED_CERT_SERIALS:-}
+      - WEBHOOK_API_KEY=${WEBHOOK_API_KEY:-}
+      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-}
+    volumes:
+      - ha-things-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ha-things-data:
