@@ -3,7 +3,8 @@ import { Loader2, Search } from 'lucide-react';
 import Modal from './Modal';
 import { api } from '../api';
 import type { Device, DeviceType, EntityOption, Instance } from '../types';
-import { DEVICE_TYPE_LABELS } from '../types';
+import { DEVICE_TYPE_KEYS } from '../types';
+import { useLanguage } from '../i18n';
 
 const DEVICE_TYPES: DeviceType[] = ['switch', 'thermostat', 'blind', 'garage_door', 'sensor', 'pulse', 'button'];
 
@@ -20,6 +21,7 @@ export default function DeviceModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useLanguage();
   const [instanceId, setInstanceId] = useState(device?.instanceId || defaultInstanceId || instances[0]?.id || '');
   const [name, setName] = useState(device?.name || '');
   const [entityId, setEntityId] = useState(device?.entityId || '');
@@ -63,7 +65,7 @@ export default function DeviceModal({
     e.preventDefault();
     setError(null);
     if (!instanceId || !entityId || !name) {
-      setError('Completa todos los campos obligatorios');
+      setError(t('device.requiredFields'));
       return;
     }
     setSaving(true);
@@ -77,16 +79,16 @@ export default function DeviceModal({
       onSaved();
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Error al guardar');
+      setError(err.message || t('device.saveError'));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title={device ? 'Editar dispositivo' : 'Añadir dispositivo'} onClose={onClose}>
+    <Modal title={device ? t('device.edit') : t('device.add')} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Field label="Home Assistant">
+        <Field label={t('device.instance')}>
           <select className="input" value={instanceId} onChange={(e) => setInstanceId(e.target.value)}>
             {instances.map((i) => (
               <option key={i.id} value={i.id}>
@@ -96,13 +98,13 @@ export default function DeviceModal({
           </select>
         </Field>
 
-        <Field label="Entidad">
+        <Field label={t('device.entity')}>
           <div className="relative">
             <div className="relative">
               <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 className="input pl-8"
-                placeholder={loadingEntities ? 'Cargando entidades…' : 'Buscar entidad…'}
+                placeholder={loadingEntities ? t('device.loadingEntities') : t('device.searchEntity')}
                 value={search || entityId}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -147,22 +149,22 @@ export default function DeviceModal({
           </div>
         </Field>
 
-        <Field label="Nombre">
+        <Field label={t('device.name')}>
           <input required className="input" value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
 
-        <Field label="Tipo de dispositivo">
+        <Field label={t('device.type')}>
           <select className="input" value={deviceType} onChange={(e) => setDeviceType(e.target.value as DeviceType)}>
-            {DEVICE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {DEVICE_TYPE_LABELS[t]}
+            {DEVICE_TYPES.map((ty) => (
+              <option key={ty} value={ty}>
+                {t(DEVICE_TYPE_KEYS[ty])}
               </option>
             ))}
           </select>
         </Field>
 
         {showPulseDuration && (
-          <Field label="Duración del pulso (ms)">
+          <Field label={t('device.pulseDuration')}>
             <input
               type="number"
               min={200}
@@ -182,7 +184,7 @@ export default function DeviceModal({
           className="mt-1 flex items-center justify-center gap-2 rounded-lg bg-accent-500 py-2.5 text-sm font-semibold text-base-950 transition hover:bg-accent-400 disabled:opacity-60"
         >
           {saving && <Loader2 size={16} className="animate-spin" />}
-          {saving ? 'Guardando…' : 'Guardar dispositivo'}
+          {saving ? t('device.saving') : t('device.save')}
         </button>
       </form>
     </Modal>

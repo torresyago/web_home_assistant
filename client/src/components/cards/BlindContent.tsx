@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp, Square } from 'lucide-react';
 import type { Device, DeviceState } from '../../types';
+import { useLanguage } from '../../i18n';
 
 export default function BlindContent({
   state,
@@ -9,15 +10,16 @@ export default function BlindContent({
   state?: DeviceState;
   onAction: (action: string, params?: Record<string, any>) => void;
 }) {
+  const { t } = useLanguage();
   if (state?.error) {
-    return <p className="text-sm text-slate-500">Sin datos</p>;
+    return <p className="text-sm text-slate-500">{t('card.noData')}</p>;
   }
   const position = state?.attributes?.current_position;
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between text-sm">
-        <span className="text-slate-400">Posición</span>
+        <span className="text-slate-400">{t('card.position')}</span>
         <span className="font-semibold text-accent-400">{position != null ? `${position}%` : '—'}</span>
       </div>
       {position != null && (

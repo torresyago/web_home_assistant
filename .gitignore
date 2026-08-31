@@ -4,3 +4,4 @@ server/data/
 server/public/
 *.log
 *.swp
+.claude/

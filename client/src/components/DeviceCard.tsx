@@ -14,7 +14,8 @@ import {
   Zap,
 } from 'lucide-react';
 import type { Device, DeviceState, DeviceType } from '../types';
-import { DEVICE_TYPE_LABELS } from '../types';
+import { DEVICE_TYPE_KEYS } from '../types';
+import { useLanguage } from '../i18n';
 import SwitchContent from './cards/SwitchContent';
 import ThermostatContent from './cards/ThermostatContent';
 import BlindContent from './cards/BlindContent';
@@ -47,6 +48,7 @@ export default function DeviceCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
   const Icon = ICONS[device.deviceType] || DoorOpen;
@@ -58,15 +60,15 @@ export default function DeviceCard({
       animate={{ opacity: 1, scale: 1 }}
       className="group relative flex flex-col gap-4 rounded-2xl border border-white/10 bg-base-900/60 p-5 shadow-lg backdrop-blur transition hover:border-accent-500/30"
     >
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-500/10 text-accent-400">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500/10 text-accent-400">
             <Icon size={18} />
           </div>
-          <div>
-            <p className="font-semibold text-white">{device.name}</p>
-            <p className="text-xs text-slate-500">
-              {DEVICE_TYPE_LABELS[device.deviceType]} · {device.entityId}
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-white">{device.name}</p>
+            <p className="break-words text-xs text-slate-500">
+              {t(DEVICE_TYPE_KEYS[device.deviceType])} · {device.entityId}
             </p>
           </div>
         </div>
@@ -89,7 +91,7 @@ export default function DeviceCard({
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-200 hover:bg-base-700"
               >
-                <Pencil size={14} /> Editar
+                <Pencil size={14} /> {t('deviceCard.edit')}
               </button>
               <button
                 onClick={() => {
@@ -98,7 +100,7 @@ export default function DeviceCard({
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-200 hover:bg-base-700"
               >
-                <Link2 size={14} /> Endpoint
+                <Link2 size={14} /> {t('deviceCard.endpoint')}
               </button>
               <button
                 onClick={() => {
@@ -107,7 +109,7 @@ export default function DeviceCard({
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-base-700"
               >
-                <Trash2 size={14} /> Eliminar
+                <Trash2 size={14} /> {t('deviceCard.delete')}
               </button>
             </div>
           )}

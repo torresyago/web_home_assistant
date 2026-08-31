@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const security = require('../services/security');
 
 const WINDOW_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
@@ -28,10 +29,11 @@ function timingSafeEqual(a, b) {
 
 function isQuarantined(ip) {
   const entry = attempts.get(ip);
-  return Boolean(entry && entry.blockedUntil > Date.now());
+  if (entry && entry.blockedUntil > Date.now()) return true;
+  return security.isQuarantined(ip);
 }
 
-function registerFailure(ip) {
+function registerFailure(ip, type) {
   const now = Date.now();
   let entry = attempts.get(ip);
   if (!entry || now - entry.firstAt > WINDOW_MS) {
@@ -40,12 +42,28 @@ function registerFailure(ip) {
   entry.count += 1;
   if (entry.count >= MAX_ATTEMPTS) {
     entry.blockedUntil = now + QUARANTINE_MS;
+    security.quarantineIp(ip, QUARANTINE_MS / 60000, `auto: ${MAX_ATTEMPTS} intentos fallidos (${type})`, false);
   }
   attempts.set(ip, entry);
+  security.recordAttempt({ ip, type, result: 'failure' });
 }
 
-function registerSuccess(ip) {
+function registerSuccess(ip, type) {
   attempts.delete(ip);
+  security.recordAttempt({ ip, type, result: 'success' });
+}
+
+function release(ip) {
+  attempts.delete(ip);
+  security.releaseIp(ip);
+}
+
+function checkQuarantine(req, res, next) {
+  const ip = getClientIp(req);
+  if (isQuarantined(ip)) {
+    return res.status(429).json({ error: 'Demasiados intentos fallidos, IP en cuarentena temporal' });
+  }
+  next();
 }
 
 function requireApiKey(expectedKeyEnv) {
@@ -57,12 +75,19 @@ function requireApiKey(expectedKeyEnv) {
     const expected = process.env[expectedKeyEnv];
     const provided = req.headers['x-api-key'];
     if (!expected || !provided || !timingSafeEqual(provided, expected)) {
-      registerFailure(ip);
+      registerFailure(ip, 'webhook');
       return res.status(401).json({ error: 'API key inválida' });
     }
-    registerSuccess(ip);
+    registerSuccess(ip, 'webhook');
     next();
   };
 }
 
-module.exports = { requireApiKey };
+module.exports = {
+  requireApiKey,
+  checkQuarantine,
+  registerFailure,
+  registerSuccess,
+  release,
+  getClientIp,
+};

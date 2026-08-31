@@ -1,8 +1,10 @@
 import type { DeviceState } from '../../types';
+import { useLanguage } from '../../i18n';
 
 export default function SensorContent({ state }: { state?: DeviceState }) {
+  const { t } = useLanguage();
   if (state?.error) {
-    return <p className="text-sm text-slate-500">Sin datos</p>;
+    return <p className="text-sm text-slate-500">{t('card.noData')}</p>;
   }
   const unit = state?.attributes?.unit_of_measurement;
   return (

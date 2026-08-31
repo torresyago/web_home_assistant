@@ -42,12 +42,38 @@ export interface DeviceState {
 
 export type DeviceStates = Record<string, DeviceState>;
 
-export const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
-  switch: 'Interruptor',
-  thermostat: 'Termostato',
-  blind: 'Persiana',
-  garage_door: 'Puerta de garaje',
-  sensor: 'Sensor',
-  pulse: 'Pulso',
-  button: 'Botón',
+export interface SecurityEvent {
+  ts: number;
+  ip: string;
+  type: 'login' | 'webhook';
+  result: 'success' | 'failure';
+  reason?: string | null;
+}
+
+export interface SecurityWindowCount {
+  valid: number;
+  failed: number;
+}
+
+export interface SecurityStats {
+  last15m: SecurityWindowCount;
+  lastHour: SecurityWindowCount;
+  allTime: SecurityWindowCount;
+}
+
+export interface QuarantineEntry {
+  ip: string;
+  until: number;
+  reason: string;
+  manual: boolean;
+}
+
+export const DEVICE_TYPE_KEYS: Record<DeviceType, `deviceType.${DeviceType}`> = {
+  switch: 'deviceType.switch',
+  thermostat: 'deviceType.thermostat',
+  blind: 'deviceType.blind',
+  garage_door: 'deviceType.garage_door',
+  sensor: 'deviceType.sensor',
+  pulse: 'deviceType.pulse',
+  button: 'deviceType.button',
 };

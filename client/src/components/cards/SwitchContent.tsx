@@ -1,4 +1,5 @@
 import type { Device, DeviceState } from '../../types';
+import { useLanguage } from '../../i18n';
 
 export default function SwitchContent({
   state,
@@ -8,11 +9,12 @@ export default function SwitchContent({
   state?: DeviceState;
   onAction: (action: string, params?: Record<string, any>) => void;
 }) {
+  const { t } = useLanguage();
   const isOn = state?.state === 'on';
   return (
     <div className="flex items-center justify-between">
       <span className={`text-sm font-medium ${isOn ? 'text-accent-400' : 'text-slate-500'}`}>
-        {state?.error ? 'Sin datos' : isOn ? 'Encendido' : 'Apagado'}
+        {state?.error ? t('card.noData') : isOn ? t('card.on') : t('card.off')}
       </span>
       <button
         role="switch"

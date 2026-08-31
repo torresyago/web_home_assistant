@@ -1,6 +1,7 @@
 import { Minus, Plus } from 'lucide-react';
 import { useState } from 'react';
 import type { Device, DeviceState } from '../../types';
+import { useLanguage } from '../../i18n';
 
 export default function ThermostatContent({
   state,
@@ -10,6 +11,7 @@ export default function ThermostatContent({
   state?: DeviceState;
   onAction: (action: string, params?: Record<string, any>) => void;
 }) {
+  const { t } = useLanguage();
   const attrs = state?.attributes || {};
   const current = attrs.current_temperature;
   const [target, setTarget] = useState<number | undefined>(attrs.temperature);
@@ -23,13 +25,13 @@ export default function ThermostatContent({
   }
 
   if (state?.error) {
-    return <p className="text-sm text-slate-500">Sin datos</p>;
+    return <p className="text-sm text-slate-500">{t('card.noData')}</p>;
   }
 
   return (
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-xs uppercase tracking-wide text-slate-500">Actual</p>
+        <p className="text-xs uppercase tracking-wide text-slate-500">{t('card.current')}</p>
         <p className="text-2xl font-bold text-white">{current != null ? `${current}°` : '—'}</p>
         <p className="mt-1 text-xs text-slate-500">{attrs.hvac_action || state?.state}</p>
       </div>

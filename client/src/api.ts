@@ -1,4 +1,4 @@
-import type { Device, DeviceStates, EntityOption, Instance } from './types';
+import type { Device, DeviceStates, EntityOption, Instance, SecurityEvent, SecurityStats, QuarantineEntry } from './types';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`/api${path}`, {
@@ -44,4 +44,13 @@ export const api = {
 
   runAction: (deviceId: string, action: string, params: Record<string, any> = {}) =>
     request<{ ok: boolean }>(`/actions/${deviceId}`, { method: 'POST', body: JSON.stringify({ action, params }) }),
+
+  securityStats: () => request<SecurityStats>('/security/stats'),
+  securityLog: (limit = 200) => request<SecurityEvent[]>(`/security/log?limit=${limit}`),
+  securityReset: () => request<{ ok: true }>('/security/reset', { method: 'POST' }),
+  quarantineList: () => request<QuarantineEntry[]>('/security/quarantine'),
+  quarantineAdd: (ip: string, minutes: number) =>
+    request<{ ok: true }>('/security/quarantine', { method: 'POST', body: JSON.stringify({ ip, minutes }) }),
+  quarantineRemove: (ip: string) =>
+    request<{ ok: true }>(`/security/quarantine/${encodeURIComponent(ip)}`, { method: 'DELETE' }),
 };

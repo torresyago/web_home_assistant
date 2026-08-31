@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MoreVertical, Pencil, Plus, Server, Trash2 } from 'lucide-react';
 import type { Device, DeviceStates, Instance } from '../types';
+import { useLanguage } from '../i18n';
 import DeviceCard from './DeviceCard';
 
 export default function InstanceSection({
@@ -24,6 +25,7 @@ export default function InstanceSection({
   onEditDevice: (device: Device) => void;
   onDeleteDevice: (device: Device) => void;
 }) {
+  const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const hasError = devices.length > 0 && devices.every((d) => states[d.id]?.error);
 
@@ -47,7 +49,7 @@ export default function InstanceSection({
             onClick={onAddDevice}
             className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10"
           >
-            <Plus size={14} /> Dispositivo
+            <Plus size={14} /> {t('instanceSection.addDevice')}
           </button>
           <div className="relative">
             <button
@@ -68,7 +70,7 @@ export default function InstanceSection({
                   }}
                   className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-200 hover:bg-base-700"
                 >
-                  <Pencil size={14} /> Editar
+                  <Pencil size={14} /> {t('instanceSection.edit')}
                 </button>
                 <button
                   onClick={() => {
@@ -77,7 +79,7 @@ export default function InstanceSection({
                   }}
                   className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-base-700"
                 >
-                  <Trash2 size={14} /> Eliminar
+                  <Trash2 size={14} /> {t('instanceSection.delete')}
                 </button>
               </div>
             )}
@@ -87,7 +89,7 @@ export default function InstanceSection({
 
       {devices.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center text-sm text-slate-500">
-          Todavía no has añadido dispositivos para esta instancia.
+          {t('instanceSection.empty')}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

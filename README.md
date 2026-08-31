@@ -19,6 +19,8 @@ Aplicación web para controlar dispositivos de una o varias instancias de Home A
 - Estado en vivo por sondeo cada 5 segundos.
 - Login opcional de un único usuario/contraseña para proteger el panel.
 - Endpoint webhook (`/api/webhook/:deviceId`) protegido con API key, pensado para integraciones externas (p. ej. Atajos de iOS) que no pueden presentar certificado de cliente.
+- Panel de seguridad: accesos válidos/fallidos (últimos 15 min, última hora, histórico), reset de estadísticas y gestión manual de IPs en cuarentena.
+- Interfaz en español o inglés (botón ES/EN en la cabecera, se recuerda entre sesiones) y botón de ayuda con una guía rápida de uso.
 
 ## Puesta en marcha con Docker (recomendado)
 
@@ -106,7 +108,8 @@ La app está pensada para exponerse detrás de un reverse proxy (nginx, NPM, etc
 - **Certificado de cliente (mTLS)**: el proxy puede exigir un certificado de cliente (ej. FNMT) y pasar el número de serie en la cabecera `X-SSL-Client-Serial` (y opcionalmente `X-SSL-Client-Verify`). La app valida esa cabecera y, si `ALLOWED_CERT_SERIALS` tiene valores, comprueba además que el serial esté en la lista blanca — doble capa (proxy + app) por si el proxy cambia de configuración.
 - **Login usuario/contraseña** (`ADMIN_USER`/`ADMIN_PASSWORD`) como alternativa o complemento al certificado, para acceder también desde clientes que no puedan presentar uno.
 - **Webhook con API key propia** (`WEBHOOK_API_KEY`): la ruta `/api/webhook/:deviceId` está pensada para integraciones externas (Atajos de iOS, automatizaciones) que no pueden hacer mTLS. Se autentica solo con una cabecera `X-Api-Key`, comparada con [`crypto.timingSafeEqual`](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b) para evitar ataques de temporización.
-- **Cuarentena por fuerza bruta**: si una IP falla la API key del webhook 5 veces en 5 minutos, queda bloqueada 15 minutos (`429 Too Many Requests`), independientemente de si luego usa la key correcta. Ver [`server/src/middleware/quarantine.js`](server/src/middleware/quarantine.js).
+- **Cuarentena por fuerza bruta**: si una IP falla el login o la API key del webhook 5 veces en 5 minutos, queda bloqueada 15 minutos (`429 Too Many Requests`), independientemente de si luego usa las credenciales correctas. Ver [`server/src/middleware/quarantine.js`](server/src/middleware/quarantine.js).
+- **Panel de seguridad**: desde el botón "Seguridad" del panel web puedes ver accesos válidos/fallidos (últimos 15 min, última hora e histórico), el log de los últimos accesos con IP y resultado, resetear las estadísticas, y gestionar manualmente qué IPs están en cuarentena (añadir o liberar). Todo se persiste en `data/db.json` y sobrevive a reinicios del contenedor.
 - **Rate limiting a nivel de proxy**: se recomienda añadir un `limit_req` en nginx sobre la ruta del webhook (ver ejemplo más abajo) como capa adicional contra flood/DDoS, independiente de la lógica de la app.
 - **Separación de dominios recomendada**: si usas certificado de cliente, sirve el panel web y el webhook en subdominios distintos — uno exigiendo mTLS estricto (`ssl_verify_client on`) y otro sin exigirlo, dedicado solo a `/api/webhook/*` con la API key. Mezclar `ssl_verify_client optional` con certificado opcional en el mismo host puede ser inestable con TLS 1.3 en algunas versiones de nginx.
 
@@ -169,6 +172,8 @@ Web app to control devices from one or more Home Assistant instances through a v
 - Live state via polling every 5 seconds.
 - Optional single username/password login to protect the panel.
 - Webhook endpoint (`/api/webhook/:deviceId`) protected with an API key, for external integrations (e.g. iOS Shortcuts) that cannot present a client certificate.
+- Security panel: valid/failed access attempts (last 15 min, last hour, all time), a stats reset, and manual management of quarantined IPs.
+- Spanish or English UI (ES/EN toggle in the header, remembered across sessions) and a help button with a quick usage guide.
 
 ### Getting started with Docker (recommended)
 
@@ -256,7 +261,8 @@ The app is meant to be exposed behind a reverse proxy (nginx, NPM, etc.) that te
 - **Client certificate (mTLS)**: the proxy can require a client certificate (e.g. FNMT/similar) and forward its serial number in the `X-SSL-Client-Serial` header (and optionally `X-SSL-Client-Verify`). The app validates that header and, when `ALLOWED_CERT_SERIALS` is set, additionally checks that the serial is in the allow-list — a double layer (proxy + app) in case the proxy's config changes.
 - **Username/password login** (`ADMIN_USER`/`ADMIN_PASSWORD`) as an alternative or complement to the certificate, so clients that can't present one can still get in.
 - **Webhook with its own API key** (`WEBHOOK_API_KEY`): the `/api/webhook/:deviceId` route is meant for external integrations (iOS Shortcuts, automations) that can't do mTLS. It's authenticated purely with an `X-Api-Key` header, compared using [`crypto.timingSafeEqual`](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b) to avoid timing attacks.
-- **Brute-force quarantine**: if an IP fails the webhook API key 5 times within 5 minutes, it gets blocked for 15 minutes (`429 Too Many Requests`), regardless of whether it later uses the correct key. See [`server/src/middleware/quarantine.js`](server/src/middleware/quarantine.js).
+- **Brute-force quarantine**: if an IP fails login or the webhook API key 5 times within 5 minutes, it gets blocked for 15 minutes (`429 Too Many Requests`), regardless of whether it later uses the correct credentials. See [`server/src/middleware/quarantine.js`](server/src/middleware/quarantine.js).
+- **Security panel**: the "Seguridad" button in the web panel shows valid/failed access attempts (last 15 min, last hour, and all-time), a log of recent attempts with IP and result, a way to reset the stats, and manual management of which IPs are quarantined (add or release). Everything is persisted in `data/db.json` and survives container restarts.
 - **Proxy-level rate limiting**: it's recommended to add an nginx `limit_req` on the webhook route (see example below) as an extra layer against flood/DDoS traffic, independent of the app's own logic.
 - **Recommended domain separation**: if you use a client certificate, serve the web panel and the webhook on separate subdomains — one strictly requiring mTLS (`ssl_verify_client on`) and another without it, dedicated only to `/api/webhook/*` with the API key. Mixing `ssl_verify_client optional` with an optional certificate on the same host can be unstable with TLS 1.3 on some nginx versions.
 

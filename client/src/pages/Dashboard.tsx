@@ -1,17 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Home, LogOut, Plus } from 'lucide-react';
+import { HelpCircle, Home, LogOut, Plus, ShieldCheck } from 'lucide-react';
 import { api } from '../api';
+import { useLanguage } from '../i18n';
 import type { Device, DeviceStates, Instance } from '../types';
 import InstanceSection from '../components/InstanceSection';
 import InstanceModal from '../components/InstanceModal';
 import DeviceModal from '../components/DeviceModal';
 import ConfirmDialog from '../components/ConfirmDialog';
+import LanguageSwitch from '../components/LanguageSwitch';
+import HelpModal from '../components/HelpModal';
+import SecurityPanel from './SecurityPanel';
 
 export default function Dashboard({ authEnabled, onLogout }: { authEnabled: boolean; onLogout: () => void }) {
+  const { t } = useLanguage();
+  const [view, setView] = useState<'devices' | 'security'>('devices');
   const [instances, setInstances] = useState<Instance[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const [states, setStates] = useState<DeviceStates>({});
   const [loading, setLoading] = useState(true);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const [instanceModal, setInstanceModal] = useState<{ open: boolean; instance?: Instance }>({ open: false });
   const [deviceModal, setDeviceModal] = useState<{ open: boolean; device?: Device; instanceId?: string }>({
@@ -68,9 +75,13 @@ export default function Dashboard({ authEnabled, onLogout }: { authEnabled: bool
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-slate-500">
-        Cargando…
+        {t('app.loading')}
       </div>
     );
+  }
+
+  if (view === 'security') {
+    return <SecurityPanel onBack={() => setView('devices')} />;
   }
 
   return (
@@ -82,15 +93,28 @@ export default function Dashboard({ authEnabled, onLogout }: { authEnabled: bool
           </div>
           <div>
             <h1 className="text-lg font-bold text-white">HA Things</h1>
-            <p className="text-xs text-slate-500">Control de tus dispositivos Home Assistant</p>
+            <p className="text-xs text-slate-500">{t('dashboard.subtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <LanguageSwitch />
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-sm text-slate-300 hover:bg-white/10"
+          >
+            <HelpCircle size={16} />
+          </button>
+          <button
+            onClick={() => setView('security')}
+            className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-sm text-slate-300 hover:bg-white/10"
+          >
+            <ShieldCheck size={16} /> {t('nav.security')}
+          </button>
           <button
             onClick={() => setInstanceModal({ open: true })}
             className="flex items-center gap-1.5 rounded-lg bg-accent-500 px-3.5 py-2 text-sm font-semibold text-base-950 hover:bg-accent-400"
           >
-            <Plus size={16} /> Home Assistant
+            <Plus size={16} /> {t('nav.addInstance')}
           </button>
           {authEnabled && (
             <button
@@ -106,12 +130,12 @@ export default function Dashboard({ authEnabled, onLogout }: { authEnabled: bool
       {instances.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-white/10 py-20 text-center">
           <Home size={32} className="text-slate-600" />
-          <p className="text-slate-400">Añade tu primera instancia de Home Assistant para empezar</p>
+          <p className="text-slate-400">{t('dashboard.emptyState')}</p>
           <button
             onClick={() => setInstanceModal({ open: true })}
             className="mt-2 flex items-center gap-1.5 rounded-lg bg-accent-500 px-4 py-2 text-sm font-semibold text-base-950 hover:bg-accent-400"
           >
-            <Plus size={16} /> Añadir Home Assistant
+            <Plus size={16} /> {t('dashboard.addInstance')}
           </button>
         </div>
       ) : (
@@ -153,16 +177,18 @@ export default function Dashboard({ authEnabled, onLogout }: { authEnabled: bool
 
       {confirmDelete && (
         <ConfirmDialog
-          title={confirmDelete.type === 'instance' ? 'Eliminar Home Assistant' : 'Eliminar dispositivo'}
+          title={confirmDelete.type === 'instance' ? t('dashboard.deleteInstanceTitle') : t('dashboard.deleteDeviceTitle')}
           message={
             confirmDelete.type === 'instance'
-              ? `Se eliminará "${confirmDelete.instance.name}" y todos sus dispositivos.`
-              : `Se eliminará el dispositivo "${confirmDelete.device.name}".`
+              ? t('dashboard.deleteInstanceMessage', { name: confirmDelete.instance.name })
+              : t('dashboard.deleteDeviceMessage', { name: confirmDelete.device.name })
           }
           onConfirm={handleDeleteConfirmed}
           onCancel={() => setConfirmDelete(null)}
         />
       )}
+
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import Modal from './Modal';
 import { api } from '../api';
 import type { Instance } from '../types';
+import { useLanguage } from '../i18n';
 
 export default function InstanceModal({
   instance,
@@ -13,6 +14,7 @@ export default function InstanceModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useLanguage();
   const [name, setName] = useState(instance?.name || '');
   const [url, setUrl] = useState(instance?.url || 'http://homeassistant.local:8123');
   const [token, setToken] = useState(instance?.token || '');
@@ -33,34 +35,34 @@ export default function InstanceModal({
       const result = await api.testInstance(saved.id);
       if (result.ok) {
         setTestResult('ok');
-        setTestMessage('Conexión correcta');
+        setTestMessage(t('instance.testOk'));
         onSaved();
         setTimeout(onClose, 700);
       } else {
         setTestResult('fail');
-        setTestMessage(result.error || 'No se pudo conectar');
+        setTestMessage(result.error || t('instance.testFail'));
         onSaved();
       }
     } catch (err: any) {
-      setError(err.message || 'Error al guardar');
+      setError(err.message || t('instance.saveError'));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title={instance ? 'Editar Home Assistant' : 'Añadir Home Assistant'} onClose={onClose}>
+    <Modal title={instance ? t('instance.edit') : t('instance.add')} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Field label="Nombre">
+        <Field label={t('instance.name')}>
           <input
             required
             className="input"
-            placeholder="Casa principal"
+            placeholder={t('instance.namePlaceholder')}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </Field>
-        <Field label="URL">
+        <Field label={t('instance.url')}>
           <input
             required
             className="input"
@@ -69,7 +71,7 @@ export default function InstanceModal({
             onChange={(e) => setUrl(e.target.value)}
           />
         </Field>
-        <Field label="Token de acceso de larga duración">
+        <Field label={t('instance.token')}>
           <textarea
             required
             className="input min-h-[80px] resize-none font-mono text-xs"
@@ -80,7 +82,7 @@ export default function InstanceModal({
         </Field>
         <label className="flex items-center gap-2 text-sm text-slate-400">
           <input type="checkbox" checked={insecure} onChange={(e) => setInsecure(e.target.checked)} />
-          Permitir certificado SSL no verificado
+          {t('instance.insecure')}
         </label>
 
         {error && <p className="text-sm text-red-400">{error}</p>}
@@ -101,7 +103,7 @@ export default function InstanceModal({
           className="mt-1 flex items-center justify-center gap-2 rounded-lg bg-accent-500 py-2.5 text-sm font-semibold text-base-950 transition hover:bg-accent-400 disabled:opacity-60"
         >
           {saving && <Loader2 size={16} className="animate-spin" />}
-          {saving ? 'Guardando…' : 'Guardar y probar conexión'}
+          {saving ? t('instance.saving') : t('instance.save')}
         </button>
       </form>
     </Modal>

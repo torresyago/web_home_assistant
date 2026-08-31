@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Copy, X } from 'lucide-react';
 import type { Device } from '../types';
+import { useLanguage, type TranslationKey } from '../i18n';
 
-function defaultAction(device: Device): { action: string; params?: Record<string, any>; note?: string } {
+function defaultAction(device: Device, t: (key: TranslationKey) => string): { action: string; params?: Record<string, any>; note?: string } {
   const domain = device.entityId.split('.')[0];
   switch (device.deviceType) {
     case 'switch':
@@ -13,17 +14,17 @@ function defaultAction(device: Device): { action: string; params?: Record<string
     case 'button':
       return { action: 'press' };
     case 'garage_door':
-      return domain === 'cover' ? { action: 'open_cover', note: 'Usa "close_cover" para cerrar.' } : { action: 'pulse' };
+      return domain === 'cover' ? { action: 'open_cover', note: t('endpoint.noteCloseCover') } : { action: 'pulse' };
     case 'blind':
-      return { action: 'open_cover', note: 'Otras acciones: "close_cover", "stop_cover", o "set_cover_position" con params.position (0-100).' };
+      return { action: 'open_cover', note: t('endpoint.noteBlind') };
     case 'thermostat':
       return {
         action: 'set_temperature',
         params: { temperature: 21 },
-        note: 'Otra acción: "set_hvac_mode" con params.hvac_mode.',
+        note: t('endpoint.noteThermostat'),
       };
     case 'sensor':
-      return { action: '', note: 'Los sensores son de solo lectura, no aceptan acciones.' };
+      return { action: '', note: t('endpoint.noteSensor') };
     default:
       return { action: 'toggle' };
   }
@@ -32,6 +33,7 @@ function defaultAction(device: Device): { action: string; params?: Record<string
 type Mode = 'session' | 'webhook';
 
 export default function EndpointModal({ device, onClose }: { device: Device; onClose: () => void }) {
+  const { t } = useLanguage();
   const [mode, setMode] = useState<Mode>('session');
   const [copied, setCopied] = useState<string | null>(null);
   const [webhookKey, setWebhookKey] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export default function EndpointModal({ device, onClose }: { device: Device; onC
       .catch(() => setWebhookKeyLoaded(true));
   }, [mode, webhookKeyLoaded]);
 
-  const { action, params, note } = defaultAction(device);
+  const { action, params, note } = defaultAction(device, t);
   const body = JSON.stringify(params ? { action, params } : { action });
 
   const url =
@@ -87,7 +89,7 @@ export default function EndpointModal({ device, onClose }: { device: Device; onC
       >
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-white">Endpoint para Atajos</h2>
+            <h2 className="text-lg font-semibold text-white">{t('endpoint.title')}</h2>
             <p className="text-sm text-slate-500">{device.name}</p>
           </div>
           <button onClick={onClose} className="rounded-lg p-1 text-slate-500 hover:bg-base-700 hover:text-slate-200">
@@ -102,7 +104,7 @@ export default function EndpointModal({ device, onClose }: { device: Device; onC
               mode === 'session' ? 'bg-base-700 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            Sesión
+            {t('endpoint.session')}
           </button>
           <button
             onClick={() => setMode('webhook')}
@@ -110,7 +112,7 @@ export default function EndpointModal({ device, onClose }: { device: Device; onC
               mode === 'webhook' ? 'bg-base-700 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            Webhook
+            {t('endpoint.webhook')}
           </button>
         </div>
 
@@ -119,13 +121,11 @@ export default function EndpointModal({ device, onClose }: { device: Device; onC
         ) : (
           <div className="space-y-4">
             {mode === 'webhook' && webhookKeyLoaded && !webhookKey && (
-              <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
-                No hay WEBHOOK_API_KEY configurada en el servidor. Añádela en el .env y reinicia el contenedor.
-              </p>
+              <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-400">{t('endpoint.noKey')}</p>
             )}
 
             <div>
-              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">URL (POST)</p>
+              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">{t('endpoint.urlLabel')}</p>
               <div className="flex items-center gap-2 rounded-lg bg-base-800 px-3 py-2">
                 <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-sm text-accent-400">{url}</code>
                 <button onClick={() => copy(url, 'url')} className="shrink-0 text-slate-400 hover:text-slate-200">
@@ -136,7 +136,7 @@ export default function EndpointModal({ device, onClose }: { device: Device; onC
 
             {mode === 'webhook' && (
               <div>
-                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">Cabecera</p>
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">{t('endpoint.headerLabel')}</p>
                 <div className="flex items-center gap-2 rounded-lg bg-base-800 px-3 py-2">
                   <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-sm text-slate-200">
                     X-Api-Key: {webhookKey || '••••••••'}
@@ -154,14 +154,14 @@ export default function EndpointModal({ device, onClose }: { device: Device; onC
             )}
 
             <div>
-              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">Cuerpo JSON</p>
+              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">{t('endpoint.bodyLabel')}</p>
               <div className="flex items-center gap-2 rounded-lg bg-base-800 px-3 py-2">
                 <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-sm text-slate-200">{body}</code>
               </div>
             </div>
 
             <div>
-              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">Prueba con curl</p>
+              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">{t('endpoint.curlLabel')}</p>
               <div className="flex items-center gap-2 rounded-lg bg-base-800 px-3 py-2">
                 <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-xs text-slate-300">{curl}</code>
                 <button onClick={() => copy(curl, 'curl')} className="shrink-0 text-slate-400 hover:text-slate-200">
@@ -173,9 +173,7 @@ export default function EndpointModal({ device, onClose }: { device: Device; onC
             {note && <p className="text-xs text-slate-500">{note}</p>}
 
             <p className="text-xs text-slate-500">
-              {mode === 'session'
-                ? 'Requiere sesión iniciada (login o certificado de cliente en el navegador/cliente). No funciona desde Atajos de iOS, que no presenta certificados.'
-                : 'En Atajos de iOS: acción "Obtener contenido de URL" → Método POST → Headers: Content-Type: application/json y X-Api-Key con la clave de arriba → Request Body JSON con el cuerpo de arriba.'}
+              {mode === 'session' ? t('endpoint.sessionHelp') : t('endpoint.webhookHelp')}
             </p>
           </div>
         )}

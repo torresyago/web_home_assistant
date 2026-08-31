@@ -9,6 +9,7 @@ const devicesRoutes = require('./routes/devices');
 const actionsRoutes = require('./routes/actions');
 const webhookRoutes = require('./routes/webhook');
 const webhookKeyRoutes = require('./routes/webhookKey');
+const securityRoutes = require('./routes/security');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +30,7 @@ app.use('/api/devices', requireAuth, devicesRoutes);
 app.use('/api/actions', requireAuth, actionsRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api/webhook-key', requireAuth, webhookKeyRoutes);
+app.use('/api/security', requireAuth, securityRoutes);
 
 const clientDist = path.join(__dirname, '..', 'public');
 app.use(express.static(clientDist));

@@ -2,8 +2,11 @@ import { useState, type FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Home, Lock, User } from 'lucide-react';
 import { api } from '../api';
+import { useLanguage } from '../i18n';
+import LanguageSwitch from '../components/LanguageSwitch';
 
 export default function Login({ onSuccess }: { onSuccess: () => void }) {
+  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +20,7 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
       await api.login(username, password);
       onSuccess();
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+      setError(err.message || t('login.error'));
     } finally {
       setLoading(false);
     }
@@ -25,6 +28,9 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="absolute right-4 top-4">
+        <LanguageSwitch />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -36,14 +42,14 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
             <Home size={24} />
           </div>
           <h1 className="text-xl font-bold text-white">HA Things</h1>
-          <p className="text-sm text-slate-400">Inicia sesión para controlar tus dispositivos</p>
+          <p className="text-sm text-slate-400">{t('login.subtitle')}</p>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="relative">
             <User size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               className="w-full rounded-lg border border-white/10 bg-base-800 py-2.5 pl-9 pr-3 text-sm outline-none ring-accent-500/50 focus:ring-2"
-              placeholder="Usuario"
+              placeholder={t('login.username')}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoFocus
@@ -54,7 +60,7 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
             <input
               type="password"
               className="w-full rounded-lg border border-white/10 bg-base-800 py-2.5 pl-9 pr-3 text-sm outline-none ring-accent-500/50 focus:ring-2"
-              placeholder="Contraseña"
+              placeholder={t('login.password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -65,7 +71,7 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
             disabled={loading}
             className="mt-2 rounded-lg bg-accent-500 py-2.5 text-sm font-semibold text-base-950 transition hover:bg-accent-400 disabled:opacity-60"
           >
-            {loading ? 'Entrando…' : 'Entrar'}
+            {loading ? t('login.submitting') : t('login.submit')}
           </button>
         </form>
       </motion.div>
