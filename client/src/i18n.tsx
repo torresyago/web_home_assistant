@@ -105,6 +105,8 @@ const dict = {
     'deviceCard.delete': 'Eliminar',
 
     'card.noData': 'Sin datos',
+    'card.online': 'En línea',
+    'card.offline': 'No disponible en Home Assistant',
     'card.on': 'Encendido',
     'card.off': 'Apagado',
     'card.current': 'Actual',
@@ -253,6 +255,8 @@ const dict = {
     'deviceCard.delete': 'Delete',
 
     'card.noData': 'No data',
+    'card.online': 'Online',
+    'card.offline': 'Unavailable in Home Assistant',
     'card.on': 'On',
     'card.off': 'Off',
     'card.current': 'Current',

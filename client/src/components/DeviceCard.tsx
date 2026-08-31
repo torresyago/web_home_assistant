@@ -52,6 +52,7 @@ export default function DeviceCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
   const Icon = ICONS[device.deviceType] || DoorOpen;
+  const isOffline = Boolean(state?.error) || state?.state === 'unavailable';
 
   return (
     <motion.div
@@ -66,7 +67,17 @@ export default function DeviceCard({
             <Icon size={18} />
           </div>
           <div className="min-w-0">
-            <p className="truncate font-semibold text-white">{device.name}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="truncate font-semibold text-white">{device.name}</p>
+              <span className="relative flex h-2 w-2 shrink-0" title={isOffline ? t('card.offline') : t('card.online')}>
+                {isOffline && (
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                )}
+                <span
+                  className={`relative inline-flex h-2 w-2 rounded-full ${isOffline ? 'bg-red-500' : 'bg-emerald-500'}`}
+                />
+              </span>
+            </div>
             <p className="break-words text-xs text-slate-500">
               {t(DEVICE_TYPE_KEYS[device.deviceType])} · {device.entityId}
             </p>
