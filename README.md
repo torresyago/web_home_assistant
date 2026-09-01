@@ -212,7 +212,7 @@ Con `docker compose up`, se levanta **un único contenedor** (`ha-things`), que 
 
 Opcionalmente, delante de este contenedor sueles poner tu propio **reverse proxy** (nginx, Nginx Proxy Manager...) para terminar TLS y, si quieres, exigir certificado de cliente (mTLS) — ver la sección [Seguridad](#seguridad) más abajo.
 
-### Diagrama
+### Diagrama de flujo
 
 ```mermaid
 flowchart LR
@@ -239,6 +239,55 @@ flowchart LR
     Nginx -->|HTTP interno| Express
     Express -->|REST API + token| HA1
     Express -->|REST API + token| HA2
+```
+
+### Diagrama de capas del stack
+
+```mermaid
+flowchart TB
+    subgraph L1["Cliente"]
+        direction LR
+        C1["Navegador<br/>(SPA)"]
+        C2["Atajos de iOS"]
+    end
+
+    subgraph L2["Frontend — React 18 + TypeScript"]
+        direction LR
+        F1["Vite<br/>(build/dev server)"]
+        F2["Tailwind CSS<br/>(estilos)"]
+        F3["Framer Motion<br/>(animaciones)"]
+        F4["Contexts propios<br/>(idioma, tema)"]
+    end
+
+    subgraph L3["Backend — Node.js + Express 4"]
+        direction LR
+        B1["Rutas API<br/>(instances, devices, actions,<br/>auth, webhook, security, users)"]
+        B2["express-session<br/>(login)"]
+        B3["undici<br/>(cliente HTTP → Home Assistant)"]
+    end
+
+    subgraph L4["Persistencia"]
+        D1[("data/db.json<br/>(sin base de datos)")]
+    end
+
+    subgraph L5["Infraestructura"]
+        direction LR
+        I1["Docker<br/>(1 imagen, 1 proceso, 1 contenedor)"]
+        I2["GitHub Actions<br/>(build + push)"]
+        I3["GHCR<br/>(registro de imágenes)"]
+    end
+
+    subgraph L6["Integración externa"]
+        E1[("Home Assistant<br/>REST API")]
+    end
+
+    L1 --> L2
+    L2 -->|"fetch /api/*"| L3
+    L3 --> L4
+    L3 -->|"REST + token"| L6
+    I2 --> I3
+    I3 -.->|imagen| I1
+    I1 -.->|ejecuta| L3
 ```
 
 ### Estructura del proyecto
@@ -561,7 +610,7 @@ npm run build
 
 Optionally, you'd put your own **reverse proxy** (nginx, Nginx Proxy Manager...) in front of this container to terminate TLS and, if you want, require a client certificate (mTLS) — see the [Security](#security) section below.
 
-#### Diagram
+#### Flow diagram
 
 ```mermaid
 flowchart LR
@@ -588,6 +637,55 @@ flowchart LR
     Nginx -->|internal HTTP| Express
     Express -->|REST API + token| HA1
     Express -->|REST API + token| HA2
+```
+
+#### Tech stack layers
+
+```mermaid
+flowchart TB
+    subgraph L1["Client"]
+        direction LR
+        C1["Browser<br/>(SPA)"]
+        C2["iOS Shortcuts"]
+    end
+
+    subgraph L2["Frontend — React 18 + TypeScript"]
+        direction LR
+        F1["Vite<br/>(build/dev server)"]
+        F2["Tailwind CSS<br/>(styling)"]
+        F3["Framer Motion<br/>(animations)"]
+        F4["Custom Contexts<br/>(language, theme)"]
+    end
+
+    subgraph L3["Backend — Node.js + Express 4"]
+        direction LR
+        B1["API routes<br/>(instances, devices, actions,<br/>auth, webhook, security, users)"]
+        B2["express-session<br/>(login)"]
+        B3["undici<br/>(HTTP client → Home Assistant)"]
+    end
+
+    subgraph L4["Persistence"]
+        D1[("data/db.json<br/>(no database)")]
+    end
+
+    subgraph L5["Infrastructure"]
+        direction LR
+        I1["Docker<br/>(1 image, 1 process, 1 container)"]
+        I2["GitHub Actions<br/>(build + push)"]
+        I3["GHCR<br/>(image registry)"]
+    end
+
+    subgraph L6["External integration"]
+        E1[("Home Assistant<br/>REST API")]
+    end
+
+    L1 --> L2
+    L2 -->|"fetch /api/*"| L3
+    L3 --> L4
+    L3 -->|"REST + token"| L6
+    I2 --> I3
+    I3 -.->|image| I1
+    I1 -.->|runs| L3
 ```
 
 #### Project structure
