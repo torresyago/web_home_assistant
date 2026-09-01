@@ -5,6 +5,7 @@ import { useLanguage } from '../i18n';
 import type { SecurityEvent, SecurityStats, QuarantineEntry } from '../types';
 import ConfirmDialog from '../components/ConfirmDialog';
 import LanguageSwitch from '../components/LanguageSwitch';
+import ThemeToggle from '../components/ThemeToggle';
 
 function formatTs(ts: number) {
   return new Date(ts).toLocaleString();
@@ -95,6 +96,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <LanguageSwitch />
           <button
             onClick={() => setConfirmReset(true)}

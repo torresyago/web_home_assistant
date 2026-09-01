@@ -4,6 +4,7 @@ import { Home, Lock, User } from 'lucide-react';
 import { api } from '../api';
 import { useLanguage } from '../i18n';
 import LanguageSwitch from '../components/LanguageSwitch';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Login({ onSuccess }: { onSuccess: () => void }) {
   const { t } = useLanguage();
@@ -28,7 +29,8 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="absolute right-4 top-4">
+      <div className="absolute right-4 top-4 flex items-center gap-2">
+        <ThemeToggle />
         <LanguageSwitch />
       </div>
       <motion.div

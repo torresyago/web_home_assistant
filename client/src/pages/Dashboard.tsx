@@ -8,6 +8,7 @@ import InstanceModal from '../components/InstanceModal';
 import DeviceModal from '../components/DeviceModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import LanguageSwitch from '../components/LanguageSwitch';
+import ThemeToggle from '../components/ThemeToggle';
 import HelpModal from '../components/HelpModal';
 import SecurityPanel from './SecurityPanel';
 
@@ -97,6 +98,7 @@ export default function Dashboard({ authEnabled, onLogout }: { authEnabled: bool
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <LanguageSwitch />
           <button
             onClick={() => setHelpOpen(true)}

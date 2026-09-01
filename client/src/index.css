@@ -14,6 +14,7 @@ body {
     radial-gradient(circle at 15% 0%, rgba(45, 212, 191, 0.10), transparent 40%),
     radial-gradient(circle at 85% 20%, rgba(99, 102, 241, 0.10), transparent 40%);
   background-attachment: fixed;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 ::-webkit-scrollbar {
@@ -32,4 +33,90 @@ body {
   .input {
     @apply w-full rounded-lg border border-white/10 bg-base-800 px-3 py-2.5 text-sm text-slate-100 outline-none ring-accent-500/50 placeholder:text-slate-600 focus:ring-2;
   }
+}
+
+/* ─── Modo claro ─────────────────────────────────────────────────────────
+   La app se diseñó dark-first con colores fijos repartidos en muchos
+   componentes. En vez de reescribir cada uno con variantes dark:/light:,
+   se sobreescriben aquí las clases de Tailwind ya usadas cuando el html
+   tiene la clase .light, aplicado por ThemeProvider. */
+
+html.light body {
+  background-color: #f8fafc;
+  color: #1e293b;
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(45, 212, 191, 0.08), transparent 40%),
+    radial-gradient(circle at 85% 20%, rgba(99, 102, 241, 0.06), transparent 40%);
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+html.light .bg-base-950 {
+  background-color: #f8fafc;
+}
+html.light .bg-base-900,
+html.light .bg-base-900\/60,
+html.light .bg-base-900\/70 {
+  background-color: #ffffff;
+}
+html.light .bg-base-800 {
+  background-color: #f1f5f9;
+}
+html.light .bg-base-700 {
+  background-color: #e2e8f0;
+}
+html.light .hover\:bg-base-600:hover,
+html.light .hover\:bg-base-700:hover {
+  background-color: #cbd5e1;
+}
+
+html.light .border-white\/10 {
+  border-color: rgba(15, 23, 42, 0.1);
+}
+html.light .bg-white\/5 {
+  background-color: rgba(15, 23, 42, 0.04);
+}
+html.light .bg-white\/10,
+html.light .hover\:bg-white\/10:hover {
+  background-color: rgba(15, 23, 42, 0.08);
+}
+
+html.light .text-white {
+  color: #0f172a;
+}
+html.light .text-slate-100,
+html.light .text-slate-200 {
+  color: #1e293b;
+}
+html.light .text-slate-300 {
+  color: #334155;
+}
+html.light .text-slate-400 {
+  color: #64748b;
+}
+html.light .text-slate-500 {
+  color: #94a3b8;
+}
+html.light .text-slate-600,
+html.light .placeholder\:text-slate-600::placeholder {
+  color: #cbd5e1;
+}
+
+html.light .text-accent-400 {
+  color: #0d9488;
+}
+html.light .text-red-400 {
+  color: #dc2626;
+}
+html.light .text-emerald-400 {
+  color: #059669;
+}
+html.light .text-amber-400 {
+  color: #b45309;
+}
+
+html.light .shadow-glow {
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06), 0 8px 24px -4px rgba(15, 23, 42, 0.08);
 }

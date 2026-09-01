@@ -21,6 +21,7 @@ Aplicación web para controlar dispositivos de una o varias instancias de Home A
 - Endpoint webhook (`/api/webhook/:deviceId`) protegido con API key, pensado para integraciones externas (p. ej. Atajos de iOS) que no pueden presentar certificado de cliente.
 - Panel de seguridad: accesos válidos/fallidos (últimos 15 min, última hora, histórico), reset de estadísticas y gestión manual de IPs en cuarentena.
 - Interfaz en español o inglés (botón ES/EN en la cabecera, se recuerda entre sesiones) y botón de ayuda con una guía rápida de uso.
+- Modo claro / oscuro (icono de sol/luna en la cabecera, se recuerda entre sesiones).
 
 ## Puesta en marcha con Docker (recomendado)
 
@@ -174,6 +175,7 @@ Web app to control devices from one or more Home Assistant instances through a v
 - Webhook endpoint (`/api/webhook/:deviceId`) protected with an API key, for external integrations (e.g. iOS Shortcuts) that cannot present a client certificate.
 - Security panel: valid/failed access attempts (last 15 min, last hour, all time), a stats reset, and manual management of quarantined IPs.
 - Spanish or English UI (ES/EN toggle in the header, remembered across sessions) and a help button with a quick usage guide.
+- Light / dark mode (sun/moon icon in the header, remembered across sessions).
 
 ### Getting started with Docker (recommended)
 
