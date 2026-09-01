@@ -5,6 +5,7 @@ const { checkQuarantine, registerFailure, registerSuccess, getClientIp } = requi
 const router = express.Router();
 
 router.get('/status', (req, res) => {
+  const ip = getClientIp(req);
   if (certAuthenticatedAndLog(req)) {
     if (req.session) req.session.authenticated = true;
     return res.json({
@@ -12,15 +13,20 @@ router.get('/status', (req, res) => {
       passwordLoginAllowed: passwordLoginAllowed(),
       authenticated: true,
       cert: certInfo(req),
+      ip,
+      method: 'cert',
     });
   }
   const noCredentialsConfigured = !authEnabled();
   const canUsePassword = passwordLoginAllowed();
+  const sessionAuthenticated = canUsePassword && Boolean(req.session && req.session.authenticated);
   res.json({
     authEnabled: authEnabled(),
     passwordLoginAllowed: canUsePassword,
-    authenticated: noCredentialsConfigured ? true : canUsePassword && Boolean(req.session && req.session.authenticated),
+    authenticated: noCredentialsConfigured ? true : sessionAuthenticated,
     cert: null,
+    ip,
+    method: sessionAuthenticated ? 'password' : noCredentialsConfigured ? 'none' : null,
   });
 });
 

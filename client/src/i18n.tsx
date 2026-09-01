@@ -22,6 +22,7 @@ const dict = {
     'nav.addInstance': 'Home Assistant',
 
     'dashboard.subtitle': 'Control de tus dispositivos Home Assistant',
+    'dashboard.methodPassword': 'Contraseña',
     'dashboard.emptyState': 'Añade tu primera instancia de Home Assistant para empezar',
     'dashboard.addInstance': 'Añadir Home Assistant',
     'dashboard.deleteInstanceTitle': 'Eliminar Home Assistant',
@@ -209,6 +210,7 @@ const dict = {
     'nav.addInstance': 'Home Assistant',
 
     'dashboard.subtitle': 'Control your Home Assistant devices',
+    'dashboard.methodPassword': 'Password',
     'dashboard.emptyState': 'Add your first Home Assistant instance to get started',
     'dashboard.addInstance': 'Add Home Assistant',
     'dashboard.deleteInstanceTitle': 'Delete Home Assistant',

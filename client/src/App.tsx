@@ -13,7 +13,16 @@ export default function App() {
     api
       .authStatus()
       .then(setStatus)
-      .catch(() => setStatus({ authEnabled: false, passwordLoginAllowed: false, authenticated: true, cert: null }));
+      .catch(() =>
+        setStatus({
+          authEnabled: false,
+          passwordLoginAllowed: false,
+          authenticated: true,
+          cert: null,
+          ip: '',
+          method: null,
+        })
+      );
   }, []);
 
   if (!status) {
@@ -22,7 +31,7 @@ export default function App() {
 
   if (!status.authenticated) {
     if (status.passwordLoginAllowed) {
-      return <Login onSuccess={() => setStatus({ ...status, authenticated: true })} />;
+      return <Login onSuccess={() => api.authStatus().then(setStatus)} />;
     }
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
@@ -38,6 +47,8 @@ export default function App() {
     <Dashboard
       authEnabled={status.authEnabled}
       cert={status.cert}
+      ip={status.ip}
+      method={status.method}
       onLogout={async () => {
         await api.logout();
         setStatus({ ...status, authenticated: false });

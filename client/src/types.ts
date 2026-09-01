@@ -88,6 +88,8 @@ export interface AuthStatus {
   passwordLoginAllowed: boolean;
   authenticated: boolean;
   cert: ActiveCert | null;
+  ip: string;
+  method: 'password' | 'cert' | 'none' | null;
 }
 
 export interface AuthMethodSettings {

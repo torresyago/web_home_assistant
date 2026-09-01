@@ -15,10 +15,14 @@ import SecurityPanel from './SecurityPanel';
 export default function Dashboard({
   authEnabled,
   cert,
+  ip,
+  method,
   onLogout,
 }: {
   authEnabled: boolean;
   cert: ActiveCert | null;
+  ip: string;
+  method: 'password' | 'cert' | 'none' | null;
   onLogout: () => void;
 }) {
   const { t } = useLanguage();
@@ -106,13 +110,16 @@ export default function Dashboard({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {cert && (
+          {(method === 'cert' || method === 'password') && (
             <div
-              title={cert.serial}
+              title={method === 'cert' && cert ? cert.serial : undefined}
               className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300"
             >
               <span className="h-2 w-2 shrink-0 animate-blink rounded-full bg-emerald-500 shadow-[0_0_6px_2px_rgba(16,185,129,0.6)]" />
-              {cert.label || cert.serial}
+              <span>
+                {method === 'cert' ? cert?.label || cert?.serial : t('dashboard.methodPassword')}
+                {ip && <span className="text-slate-500"> · {ip}</span>}
+              </span>
             </div>
           )}
           <ThemeToggle />
