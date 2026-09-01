@@ -1,11 +1,11 @@
 const express = require('express');
-const { authEnabled, passwordLoginAllowed, certAuthenticated, certInfo } = require('../middleware/auth');
+const { authEnabled, passwordLoginAllowed, certAuthenticatedAndLog, certInfo } = require('../middleware/auth');
 const { checkQuarantine, registerFailure, registerSuccess, getClientIp } = require('../middleware/quarantine');
 
 const router = express.Router();
 
 router.get('/status', (req, res) => {
-  if (certAuthenticated(req)) {
+  if (certAuthenticatedAndLog(req)) {
     if (req.session) req.session.authenticated = true;
     return res.json({
       authEnabled: authEnabled(),
@@ -35,10 +35,10 @@ router.post('/login', checkQuarantine, (req, res) => {
   const ip = getClientIp(req);
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASSWORD) {
     req.session.authenticated = true;
-    registerSuccess(ip, 'login');
+    registerSuccess(ip, 'login', 'password');
     return res.json({ ok: true });
   }
-  registerFailure(ip, 'login');
+  registerFailure(ip, 'login', 'password');
   return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
 });
 

@@ -1,5 +1,7 @@
 const certSerials = require('../services/certSerials');
 const authSettings = require('../services/authSettings');
+const security = require('../services/security');
+const { getClientIp } = require('./quarantine');
 
 const CERT_SERIAL_HEADER = (process.env.CERT_SERIAL_HEADER || 'x-ssl-client-serial').toLowerCase();
 const CERT_VERIFY_HEADER = (process.env.CERT_VERIFY_HEADER || 'x-ssl-client-verify').toLowerCase();
@@ -31,8 +33,26 @@ function certAuthenticated(req) {
   return allowed.includes(certSerials.normalize(serial));
 }
 
+// Igual que certAuthenticated, pero además registra en el log de accesos la
+// primera vez que esta sesión concreta queda autenticada por certificado
+// (evita spamear el log en cada petición mientras dura la sesión).
+function certAuthenticatedAndLog(req) {
+  const info = certInfo(req);
+  if (info && req.session && !req.session.certLogged) {
+    req.session.certLogged = true;
+    security.recordAttempt({
+      ip: getClientIp(req),
+      type: 'login',
+      result: 'success',
+      method: 'cert',
+      reason: info.label || info.serial,
+    });
+  }
+  return Boolean(info);
+}
+
 function requireAuth(req, res, next) {
-  if (certAuthenticated(req)) {
+  if (certAuthenticatedAndLog(req)) {
     if (req.session) req.session.authenticated = true;
     return next();
   }
@@ -55,4 +75,4 @@ function certInfo(req) {
   return { serial, label: entry ? entry.label : '' };
 }
 
-module.exports = { requireAuth, authEnabled, passwordLoginAllowed, certAuthenticated, certInfo };
+module.exports = { requireAuth, authEnabled, passwordLoginAllowed, certAuthenticated, certAuthenticatedAndLog, certInfo };

@@ -12,9 +12,9 @@ function ensureSecurity(data) {
   return data;
 }
 
-function recordAttempt({ ip, type, result, reason }) {
+function recordAttempt({ ip, type, result, reason, method }) {
   const data = ensureSecurity(db.read());
-  const event = { ts: Date.now(), ip, type, result, reason: reason || null };
+  const event = { ts: Date.now(), ip, type, result, reason: reason || null, method: method || null };
   data.security.events.push(event);
   if (data.security.events.length > MAX_EVENTS) {
     data.security.events.splice(0, data.security.events.length - MAX_EVENTS);

@@ -465,7 +465,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
                 <tr>
                   <th className="px-4 py-2">{t('security.colDate')}</th>
                   <th className="px-4 py-2">{t('security.colIp')}</th>
-                  <th className="px-4 py-2">{t('security.colType')}</th>
+                  <th className="px-4 py-2">{t('security.colMethod')}</th>
                   <th className="px-4 py-2">{t('security.colResult')}</th>
                 </tr>
               </thead>
@@ -475,7 +475,13 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
                     <td className="px-4 py-2 text-slate-400">{formatTs(e.ts)}</td>
                     <td className="px-4 py-2 font-mono text-slate-200">{e.ip}</td>
                     <td className="px-4 py-2 text-slate-400">
-                      {e.type === 'login' ? t('security.typeLogin') : t('security.typeWebhook')}
+                      {e.type === 'webhook'
+                        ? t('security.typeWebhook')
+                        : e.method === 'cert'
+                          ? t('security.methodCertLog')
+                          : e.method === 'password'
+                            ? t('security.methodPasswordLog')
+                            : t('security.typeLogin')}
                     </td>
                     <td className="px-4 py-2">
                       {e.result === 'success' ? (

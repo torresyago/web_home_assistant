@@ -49,6 +49,7 @@ export interface SecurityEvent {
   type: 'login' | 'webhook';
   result: 'success' | 'failure';
   reason?: string | null;
+  method?: 'password' | 'cert' | null;
 }
 
 export interface SecurityWindowCount {
