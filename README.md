@@ -11,6 +11,10 @@ El modelo de "cosas" (things) sigue la misma idea que [homebridge-homeassistant-
 ## Características
 
 - Añade una o varias instancias de Home Assistant (nombre, URL y token de acceso de larga duración).
+- Al añadir un elemento, elige primero si es un **Dispositivo** o una **Automatización**: el buscador de entidades filtra según esa elección (solo `automation.*`/`script.*` en un caso, el resto de dominios en el otro), para no mezclarlos.
+
+  <img src="docs/screenshots/add-device-kind.png" alt="Añadir dispositivo, eligiendo entre Dispositivo o Automatización" width="420">
+
 - Explora y busca las entidades de cada instancia al añadir un dispositivo, sin escribir el `entity_id` a mano.
 
   <img src="docs/screenshots/add-device.png" alt="Añadir dispositivo, buscando una entidad" width="420">
@@ -303,6 +307,10 @@ The "things" model follows the same idea as [homebridge-homeassistant-things](ht
 ### Features
 
 - Add one or more Home Assistant instances (name, URL, and long-lived access token).
+- When adding an item, first choose whether it's a **Device** or an **Automation**: the entity search filters accordingly (only `automation.*`/`script.*` in one case, every other domain in the other), so they don't get mixed up.
+
+  <img src="docs/screenshots/add-device-kind.png" alt="Add device, choosing between Device or Automation" width="420">
+
 - Browse and search each instance's entities when adding a device, no need to type the `entity_id` by hand.
 
   <img src="docs/screenshots/add-device.png" alt="Add device, searching for an entity" width="420">
