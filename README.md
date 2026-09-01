@@ -106,13 +106,46 @@ docker-compose.yml
 
 La app está pensada para exponerse detrás de un reverse proxy (nginx, NPM, etc.) que termine TLS. Las medidas de seguridad previstas son:
 
-- **Certificado de cliente (mTLS)**: el proxy puede exigir un certificado de cliente (ej. FNMT) y pasar el número de serie en la cabecera `X-SSL-Client-Serial` (y opcionalmente `X-SSL-Client-Verify`). La app valida esa cabecera y, si `ALLOWED_CERT_SERIALS` tiene valores, comprueba además que el serial esté en la lista blanca — doble capa (proxy + app) por si el proxy cambia de configuración.
+- **Certificado de cliente (mTLS)**: el proxy puede exigir un certificado de cliente (ej. FNMT) y pasar el número de serie en la cabecera `X-SSL-Client-Serial` (y opcionalmente `X-SSL-Client-Verify`). La app valida esa cabecera contra una lista blanca de seriales — doble capa (proxy + app) por si el proxy cambia de configuración. Esa lista se compone de `ALLOWED_CERT_SERIALS` (variable de entorno, opcional) más los certificados gestionados desde el propio panel de Seguridad de la app (añadir/quitar sin reiniciar ni tocar el `.env`).
 - **Login usuario/contraseña** (`ADMIN_USER`/`ADMIN_PASSWORD`) como alternativa o complemento al certificado, para acceder también desde clientes que no puedan presentar uno.
 - **Webhook con API key propia** (`WEBHOOK_API_KEY`): la ruta `/api/webhook/:deviceId` está pensada para integraciones externas (Atajos de iOS, automatizaciones) que no pueden hacer mTLS. Se autentica solo con una cabecera `X-Api-Key`, comparada con [`crypto.timingSafeEqual`](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b) para evitar ataques de temporización.
 - **Cuarentena por fuerza bruta**: si una IP falla el login o la API key del webhook 5 veces en 5 minutos, queda bloqueada 15 minutos (`429 Too Many Requests`), independientemente de si luego usa las credenciales correctas. Ver [`server/src/middleware/quarantine.js`](server/src/middleware/quarantine.js).
 - **Panel de seguridad**: desde el botón "Seguridad" del panel web puedes ver accesos válidos/fallidos (últimos 15 min, última hora e histórico), el log de los últimos accesos con IP y resultado, resetear las estadísticas, y gestionar manualmente qué IPs están en cuarentena (añadir o liberar). Todo se persiste en `data/db.json` y sobrevive a reinicios del contenedor.
 - **Rate limiting a nivel de proxy**: se recomienda añadir un `limit_req` en nginx sobre la ruta del webhook (ver ejemplo más abajo) como capa adicional contra flood/DDoS, independiente de la lógica de la app.
 - **Separación de dominios recomendada**: si usas certificado de cliente, sirve el panel web y el webhook en subdominios distintos — uno exigiendo mTLS estricto (`ssl_verify_client on`) y otro sin exigirlo, dedicado solo a `/api/webhook/*` con la API key. Mezclar `ssl_verify_client optional` con certificado opcional en el mismo host puede ser inestable con TLS 1.3 en algunas versiones de nginx.
+
+### Configurar nginx para mTLS (certificado de cliente)
+
+Ejemplo de bloque a añadir dentro del `server {}` del subdominio que debe exigir certificado (p. ej. detrás de Nginx Proxy Manager, en "Custom Nginx Configuration"):
+
+```nginx
+ssl_client_certificate /ruta/a/tu_ca.crt;   # cadena completa: CA emisora + CA raíz
+ssl_verify_client optional;                 # "optional" para poder devolver un error propio en vez del 400 genérico de nginx
+ssl_verify_depth 2;
+
+set $client_serial $ssl_client_serial;
+set $cert_ok 0;
+if ($client_serial = "SERIAL_1_EN_MAYUSCULAS_SIN_DOS_PUNTOS") {
+    set $cert_ok 1;
+}
+if ($client_serial = "SERIAL_2_EN_MAYUSCULAS_SIN_DOS_PUNTOS") {
+    set $cert_ok 1;
+}
+if ($cert_ok = 0) {
+    return 495;
+}
+
+proxy_set_header X-SSL-Client-Serial $ssl_client_serial;
+proxy_set_header X-SSL-Client-Verify $ssl_client_verify;
+```
+
+Puntos importantes:
+
+- **nginx no soporta `&&`/`||` de forma fiable en `if`**, así que para aceptar *cualquiera* de varios seriales hay que acumular en una variable (`$cert_ok`) como en el ejemplo — no se puede escribir `if ($client_serial != "A" && $client_serial != "B")`.
+- El serial debe ir **en mayúsculas y sin separadores** (`:`, espacios). Si tu certificado lo muestra como `72 A1 E6 F9 ...`, en nginx es `72A1E6F9...`.
+- Si usas [Nginx Proxy Manager](https://nginxproxymanager.com/), esta configuración va en el campo "Custom Nginx Configuration" del Proxy Host — **no** se puede usar `map {}` ahí (solo está permitido a nivel `http`), por eso el ejemplo usa `if`/`set` en vez de `map`.
+- Con `more_set_input_headers` (si tienes el módulo `headers-more`) en lugar de `proxy_set_header` funciona igual; usa el que tengas disponible.
+- La app comprueba estas mismas cabeceras como segunda capa (ver más arriba), así que aunque cambies la configuración de nginx por error, un certificado no autorizado seguirá sin poder entrar mientras esté correctamente configurado el lado de la app.
 
 Ejemplo de bloque nginx para limitar la tasa de peticiones al webhook (a nivel `http`, fuera del `server`):
 
@@ -260,13 +293,46 @@ docker-compose.yml
 
 The app is meant to be exposed behind a reverse proxy (nginx, NPM, etc.) that terminates TLS. The security measures in place are:
 
-- **Client certificate (mTLS)**: the proxy can require a client certificate (e.g. FNMT/similar) and forward its serial number in the `X-SSL-Client-Serial` header (and optionally `X-SSL-Client-Verify`). The app validates that header and, when `ALLOWED_CERT_SERIALS` is set, additionally checks that the serial is in the allow-list — a double layer (proxy + app) in case the proxy's config changes.
+- **Client certificate (mTLS)**: the proxy can require a client certificate (e.g. FNMT/similar) and forward its serial number in the `X-SSL-Client-Serial` header (and optionally `X-SSL-Client-Verify`). The app validates that header against an allow-list — a double layer (proxy + app) in case the proxy's config changes. That list combines `ALLOWED_CERT_SERIALS` (optional env var) with the certificates managed from the app's own Security panel (add/remove without restarting or touching `.env`).
 - **Username/password login** (`ADMIN_USER`/`ADMIN_PASSWORD`) as an alternative or complement to the certificate, so clients that can't present one can still get in.
 - **Webhook with its own API key** (`WEBHOOK_API_KEY`): the `/api/webhook/:deviceId` route is meant for external integrations (iOS Shortcuts, automations) that can't do mTLS. It's authenticated purely with an `X-Api-Key` header, compared using [`crypto.timingSafeEqual`](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b) to avoid timing attacks.
 - **Brute-force quarantine**: if an IP fails login or the webhook API key 5 times within 5 minutes, it gets blocked for 15 minutes (`429 Too Many Requests`), regardless of whether it later uses the correct credentials. See [`server/src/middleware/quarantine.js`](server/src/middleware/quarantine.js).
 - **Security panel**: the "Seguridad" button in the web panel shows valid/failed access attempts (last 15 min, last hour, and all-time), a log of recent attempts with IP and result, a way to reset the stats, and manual management of which IPs are quarantined (add or release). Everything is persisted in `data/db.json` and survives container restarts.
 - **Proxy-level rate limiting**: it's recommended to add an nginx `limit_req` on the webhook route (see example below) as an extra layer against flood/DDoS traffic, independent of the app's own logic.
 - **Recommended domain separation**: if you use a client certificate, serve the web panel and the webhook on separate subdomains — one strictly requiring mTLS (`ssl_verify_client on`) and another without it, dedicated only to `/api/webhook/*` with the API key. Mixing `ssl_verify_client optional` with an optional certificate on the same host can be unstable with TLS 1.3 on some nginx versions.
+
+### Configuring nginx for mTLS (client certificate)
+
+Example block to add inside the `server {}` of the subdomain that must require a client certificate (e.g. behind Nginx Proxy Manager, in "Custom Nginx Configuration"):
+
+```nginx
+ssl_client_certificate /path/to/your_ca.crt;   # full chain: issuing CA + root CA
+ssl_verify_client optional;                    # "optional" so you can return your own error instead of nginx's generic 400
+ssl_verify_depth 2;
+
+set $client_serial $ssl_client_serial;
+set $cert_ok 0;
+if ($client_serial = "SERIAL_1_UPPERCASE_NO_COLONS") {
+    set $cert_ok 1;
+}
+if ($client_serial = "SERIAL_2_UPPERCASE_NO_COLONS") {
+    set $cert_ok 1;
+}
+if ($cert_ok = 0) {
+    return 495;
+}
+
+proxy_set_header X-SSL-Client-Serial $ssl_client_serial;
+proxy_set_header X-SSL-Client-Verify $ssl_client_verify;
+```
+
+Important points:
+
+- **nginx doesn't reliably support `&&`/`||` inside `if`**, so to accept *any* of several serials you need to accumulate into a variable (`$cert_ok`) as in the example — you can't write `if ($client_serial != "A" && $client_serial != "B")`.
+- The serial must be **uppercase, with no separators** (`:`, spaces). If your certificate shows it as `72 A1 E6 F9 ...`, in nginx it's `72A1E6F9...`.
+- If you use [Nginx Proxy Manager](https://nginxproxymanager.com/), this goes in the Proxy Host's "Custom Nginx Configuration" field — you **can't** use `map {}` there (only allowed at the `http` level), which is why the example uses `if`/`set` instead of `map`.
+- `more_set_input_headers` (if you have the `headers-more` module) works the same as `proxy_set_header`; use whichever you have available.
+- The app checks these same headers as a second layer (see above), so even if you misconfigure nginx, an unauthorized certificate still won't get in as long as the app side is configured correctly.
 
 Example nginx block to rate-limit requests to the webhook (at the `http` level, outside `server`):
 

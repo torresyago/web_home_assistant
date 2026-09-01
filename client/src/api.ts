@@ -1,4 +1,4 @@
-import type { Device, DeviceStates, EntityOption, Instance, SecurityEvent, SecurityStats, QuarantineEntry } from './types';
+import type { Device, DeviceStates, EntityOption, Instance, SecurityEvent, SecurityStats, QuarantineEntry, CertSerial } from './types';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`/api${path}`, {
@@ -53,4 +53,10 @@ export const api = {
     request<{ ok: true }>('/security/quarantine', { method: 'POST', body: JSON.stringify({ ip, minutes }) }),
   quarantineRemove: (ip: string) =>
     request<{ ok: true }>(`/security/quarantine/${encodeURIComponent(ip)}`, { method: 'DELETE' }),
+
+  certSerialsList: () => request<CertSerial[]>('/security/cert-serials'),
+  certSerialsAdd: (serial: string, label: string) =>
+    request<CertSerial>('/security/cert-serials', { method: 'POST', body: JSON.stringify({ serial, label }) }),
+  certSerialsRemove: (serial: string) =>
+    request<{ ok: true }>(`/security/cert-serials/${encodeURIComponent(serial)}`, { method: 'DELETE' }),
 };

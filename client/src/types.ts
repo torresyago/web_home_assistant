@@ -68,6 +68,12 @@ export interface QuarantineEntry {
   manual: boolean;
 }
 
+export interface CertSerial {
+  serial: string;
+  label: string;
+  addedAt: number;
+}
+
 export const DEVICE_TYPE_KEYS: Record<DeviceType, `deviceType.${DeviceType}`> = {
   switch: 'deviceType.switch',
   thermostat: 'deviceType.thermostat',

@@ -59,6 +59,16 @@ const dict = {
     'security.resetMessage':
       'Se borrará el histórico de accesos y los contadores (últimos 15 min / última hora / histórico). Las IPs en cuarentena no se verán afectadas.',
     'security.resetConfirm': 'Resetear',
+    'security.certSerialsTitle': 'Certificados autorizados',
+    'security.certSerialsHint': 'Números de serie de certificado cliente (mTLS) con acceso a la app.',
+    'security.certSerialPlaceholder': 'Número de serie (ej. 25E3273CA4B16CD668B6C489B61382C6)',
+    'security.certLabelPlaceholder': 'Nombre (opcional)',
+    'security.addCertSerial': 'Añadir',
+    'security.noCertSerials': 'No hay certificados adicionales dados de alta',
+    'security.colSerial': 'Serial',
+    'security.colLabel': 'Nombre',
+    'security.colAdded': 'Añadido',
+    'security.removeCertSerial': 'Eliminar',
 
     'instance.edit': 'Editar Home Assistant',
     'instance.add': 'Añadir Home Assistant',
@@ -209,6 +219,16 @@ const dict = {
     'security.resetMessage':
       'This will clear the access history and counters (last 15 min / last hour / all time). Quarantined IPs will not be affected.',
     'security.resetConfirm': 'Reset',
+    'security.certSerialsTitle': 'Authorized certificates',
+    'security.certSerialsHint': 'Client certificate (mTLS) serial numbers allowed to access the app.',
+    'security.certSerialPlaceholder': 'Serial number (e.g. 25E3273CA4B16CD668B6C489B61382C6)',
+    'security.certLabelPlaceholder': 'Label (optional)',
+    'security.addCertSerial': 'Add',
+    'security.noCertSerials': 'No additional certificates registered',
+    'security.colSerial': 'Serial',
+    'security.colLabel': 'Label',
+    'security.colAdded': 'Added',
+    'security.removeCertSerial': 'Remove',
 
     'instance.edit': 'Edit Home Assistant',
     'instance.add': 'Add Home Assistant',

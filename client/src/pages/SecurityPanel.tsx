@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft, KeyRound, Trash2 } from 'lucide-react';
 import { api } from '../api';
 import { useLanguage } from '../i18n';
-import type { SecurityEvent, SecurityStats, QuarantineEntry } from '../types';
+import type { SecurityEvent, SecurityStats, QuarantineEntry, CertSerial } from '../types';
 import ConfirmDialog from '../components/ConfirmDialog';
 import LanguageSwitch from '../components/LanguageSwitch';
 import ThemeToggle from '../components/ThemeToggle';
@@ -34,16 +34,26 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
   const [stats, setStats] = useState<SecurityStats | null>(null);
   const [log, setLog] = useState<SecurityEvent[]>([]);
   const [quarantine, setQuarantine] = useState<QuarantineEntry[]>([]);
+  const [certSerials, setCertSerials] = useState<CertSerial[]>([]);
   const [confirmReset, setConfirmReset] = useState(false);
   const [newIp, setNewIp] = useState('');
   const [newMinutes, setNewMinutes] = useState(15);
   const [error, setError] = useState<string | null>(null);
+  const [newSerial, setNewSerial] = useState('');
+  const [newSerialLabel, setNewSerialLabel] = useState('');
+  const [serialError, setSerialError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [s, l, q] = await Promise.all([api.securityStats(), api.securityLog(200), api.quarantineList()]);
+    const [s, l, q, c] = await Promise.all([
+      api.securityStats(),
+      api.securityLog(200),
+      api.quarantineList(),
+      api.certSerialsList(),
+    ]);
     setStats(s);
     setLog(l);
     setQuarantine(q);
+    setCertSerials(c);
   }, []);
 
   useEffect(() => {
@@ -74,6 +84,25 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
 
   async function handleRelease(ip: string) {
     await api.quarantineRemove(ip);
+    load();
+  }
+
+  async function handleAddCertSerial(e: React.FormEvent) {
+    e.preventDefault();
+    setSerialError(null);
+    if (!newSerial.trim()) return;
+    try {
+      await api.certSerialsAdd(newSerial.trim(), newSerialLabel.trim());
+      setNewSerial('');
+      setNewSerialLabel('');
+      load();
+    } catch (err: any) {
+      setSerialError(err.message);
+    }
+  }
+
+  async function handleRemoveCertSerial(serial: string) {
+    await api.certSerialsRemove(serial);
     load();
   }
 
@@ -188,6 +217,70 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
                         className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/10"
                       >
                         <Unlock size={14} /> {t('security.release')}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-white">
+          <KeyRound size={16} className="text-accent-400" /> {t('security.certSerialsTitle')}
+        </h2>
+        <p className="mb-3 text-xs text-slate-500">{t('security.certSerialsHint')}</p>
+        <form onSubmit={handleAddCertSerial} className="mb-3 flex flex-wrap items-center gap-2">
+          <input
+            value={newSerial}
+            onChange={(e) => setNewSerial(e.target.value)}
+            placeholder={t('security.certSerialPlaceholder')}
+            className="min-w-[20rem] flex-1 rounded-lg border border-white/10 bg-base-900 px-3 py-2 font-mono text-sm text-white placeholder:font-sans placeholder:text-slate-600"
+          />
+          <input
+            value={newSerialLabel}
+            onChange={(e) => setNewSerialLabel(e.target.value)}
+            placeholder={t('security.certLabelPlaceholder')}
+            className="w-48 rounded-lg border border-white/10 bg-base-900 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+          />
+          <button
+            type="submit"
+            className="rounded-lg bg-accent-500 px-3.5 py-2 text-sm font-semibold text-base-950 hover:bg-accent-400"
+          >
+            {t('security.addCertSerial')}
+          </button>
+        </form>
+        {serialError && <p className="mb-2 text-xs text-red-400">{serialError}</p>}
+
+        {certSerials.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-white/10 py-6 text-center text-sm text-slate-500">
+            {t('security.noCertSerials')}
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-white/10">
+            <table className="w-full text-sm">
+              <thead className="bg-white/5 text-left text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-4 py-2">{t('security.colSerial')}</th>
+                  <th className="px-4 py-2">{t('security.colLabel')}</th>
+                  <th className="px-4 py-2">{t('security.colAdded')}</th>
+                  <th className="px-4 py-2"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {certSerials.map((c) => (
+                  <tr key={c.serial}>
+                    <td className="px-4 py-2 font-mono text-slate-200">{c.serial}</td>
+                    <td className="px-4 py-2 text-slate-400">{c.label || '—'}</td>
+                    <td className="px-4 py-2 text-slate-400">{formatTs(c.addedAt)}</td>
+                    <td className="px-4 py-2 text-right">
+                      <button
+                        onClick={() => handleRemoveCertSerial(c.serial)}
+                        className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/10"
+                      >
+                        <Trash2 size={14} /> {t('security.removeCertSerial')}
                       </button>
                     </td>
                   </tr>
