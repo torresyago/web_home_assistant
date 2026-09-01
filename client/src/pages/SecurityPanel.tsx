@@ -200,15 +200,15 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex items-center justify-between">
+      <header className="mb-8 flex flex-wrap items-center justify-between gap-y-3">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-slate-300 hover:bg-white/10"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-slate-300 hover:bg-white/10"
           >
             <ArrowLeft size={18} />
           </button>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
             <ShieldCheck size={20} />
           </div>
           <div>
@@ -216,14 +216,14 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
             <p className="text-xs text-slate-500">{t('security.subtitle')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ThemeToggle />
           <LanguageSwitch />
           <button
             onClick={() => setConfirmReset(true)}
             className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3.5 py-2 text-sm text-slate-300 hover:bg-white/10"
           >
-            <RotateCcw size={16} /> {t('security.resetStats')}
+            <RotateCcw size={16} /> <span className="hidden sm:inline">{t('security.resetStats')}</span>
           </button>
         </div>
       </header>
@@ -322,7 +322,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
             {t('security.noQuarantine')}
           </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-white/10">
+          <div className="overflow-x-auto rounded-xl border border-white/10">
             <table className="w-full text-sm">
               <thead className="bg-white/5 text-left text-xs uppercase text-slate-500">
                 <tr>
@@ -386,7 +386,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
             {t('security.noCertSerials')}
           </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-white/10">
+          <div className="overflow-x-auto rounded-xl border border-white/10">
             <table className="w-full text-sm">
               <thead className="bg-white/5 text-left text-xs uppercase text-slate-500">
                 <tr>
@@ -459,7 +459,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
             {t('security.noLog')}
           </p>
         ) : (
-          <div className="max-h-[28rem] overflow-y-auto rounded-xl border border-white/10">
+          <div className="max-h-[28rem] overflow-x-auto overflow-y-auto rounded-xl border border-white/10">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-base-950 text-left text-xs uppercase text-slate-500">
                 <tr>

@@ -99,9 +99,9 @@ export default function Dashboard({
 
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex items-center justify-between">
+      <header className="mb-8 flex flex-wrap items-center justify-between gap-y-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
             <Home size={20} />
           </div>
           <div>
@@ -109,19 +109,21 @@ export default function Dashboard({
             <p className="text-xs text-slate-500">{t('dashboard.subtitle')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {(method === 'cert' || method === 'password') && (
-            <div
-              title={method === 'cert' && cert ? cert.serial : undefined}
-              className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300"
-            >
-              <span className="h-2 w-2 shrink-0 animate-blink rounded-full bg-emerald-500 shadow-[0_0_6px_2px_rgba(16,185,129,0.6)]" />
-              <span>
-                {method === 'cert' ? cert?.label || cert?.serial : t('dashboard.methodPassword')}
-                {ip && <span className="text-slate-500"> · {ip}</span>}
-              </span>
-            </div>
-          )}
+
+        {(method === 'cert' || method === 'password') && (
+          <div
+            title={method === 'cert' && cert ? cert.serial : undefined}
+            className="order-last flex w-full items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300 sm:order-none sm:w-auto"
+          >
+            <span className="h-2 w-2 shrink-0 animate-blink rounded-full bg-emerald-500 shadow-[0_0_6px_2px_rgba(16,185,129,0.6)]" />
+            <span className="truncate">
+              {method === 'cert' ? cert?.label || cert?.serial : t('dashboard.methodPassword')}
+              {ip && <span className="text-slate-500"> · {ip}</span>}
+            </span>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2">
           <ThemeToggle />
           <LanguageSwitch />
           <button
@@ -134,13 +136,13 @@ export default function Dashboard({
             onClick={() => setView('security')}
             className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-sm text-slate-300 hover:bg-white/10"
           >
-            <ShieldCheck size={16} /> {t('nav.security')}
+            <ShieldCheck size={16} /> <span className="hidden sm:inline">{t('nav.security')}</span>
           </button>
           <button
             onClick={() => setInstanceModal({ open: true })}
             className="flex items-center gap-1.5 rounded-lg bg-accent-500 px-3.5 py-2 text-sm font-semibold text-base-950 hover:bg-accent-400"
           >
-            <Plus size={16} /> {t('nav.addInstance')}
+            <Plus size={16} /> <span className="hidden sm:inline">{t('nav.addInstance')}</span>
           </button>
           {authEnabled && (
             <button
