@@ -6,7 +6,7 @@ const lastSeen = require('../services/deviceLastSeen');
 
 const router = express.Router();
 
-const VALID_TYPES = ['switch', 'thermostat', 'blind', 'garage_door', 'sensor', 'pulse', 'button'];
+const VALID_TYPES = ['switch', 'thermostat', 'blind', 'garage_door', 'sensor', 'pulse', 'button', 'automation'];
 
 router.get('/', (req, res) => {
   const { devices } = db.read();

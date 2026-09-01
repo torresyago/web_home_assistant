@@ -11,6 +11,7 @@ import {
   ToggleRight,
   Trash2,
   Warehouse,
+  Workflow,
   Zap,
 } from 'lucide-react';
 import type { Device, DeviceState, DeviceType } from '../types';
@@ -23,6 +24,7 @@ import GarageDoorContent from './cards/GarageDoorContent';
 import SensorContent from './cards/SensorContent';
 import PulseContent from './cards/PulseContent';
 import ButtonContent from './cards/ButtonContent';
+import AutomationContent from './cards/AutomationContent';
 import EndpointModal from './EndpointModal';
 
 const ICONS: Record<DeviceType, any> = {
@@ -33,6 +35,7 @@ const ICONS: Record<DeviceType, any> = {
   sensor: Activity,
   pulse: Zap,
   button: MousePointerClick,
+  automation: Workflow,
 };
 
 export default function DeviceCard({
@@ -140,6 +143,7 @@ export default function DeviceCard({
       {device.deviceType === 'sensor' && <SensorContent state={state} />}
       {device.deviceType === 'pulse' && <PulseContent device={device} onAction={onAction} />}
       {device.deviceType === 'button' && <ButtonContent onAction={onAction} />}
+      {device.deviceType === 'automation' && <AutomationContent onAction={onAction} />}
     </motion.div>
   );
 }

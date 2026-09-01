@@ -6,7 +6,16 @@ import type { Device, DeviceType, EntityOption, Instance } from '../types';
 import { DEVICE_TYPE_KEYS } from '../types';
 import { useLanguage } from '../i18n';
 
-const DEVICE_TYPES: DeviceType[] = ['switch', 'thermostat', 'blind', 'garage_door', 'sensor', 'pulse', 'button'];
+const DEVICE_TYPES: DeviceType[] = [
+  'switch',
+  'thermostat',
+  'blind',
+  'garage_door',
+  'sensor',
+  'pulse',
+  'button',
+  'automation',
+];
 
 export default function DeviceModal({
   device,

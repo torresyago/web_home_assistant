@@ -122,6 +122,7 @@ const dict = {
     'deviceType.sensor': 'Sensor',
     'deviceType.pulse': 'Pulso',
     'deviceType.button': 'Botón',
+    'deviceType.automation': 'Automatización',
 
     'instanceSection.addDevice': 'Dispositivo',
     'instanceSection.edit': 'Editar',
@@ -149,6 +150,8 @@ const dict = {
     'card.openClose': 'Abrir / Cerrar',
     'card.activate': 'Activar',
     'card.press': 'Pulsar',
+    'card.runAutomation': 'Ejecutar automatización',
+    'card.running': 'Ejecutando…',
 
     'endpoint.title': 'Endpoint para Atajos',
     'endpoint.session': 'Sesión',
@@ -158,6 +161,7 @@ const dict = {
       'Otras acciones: "close_cover", "stop_cover", o "set_cover_position" con params.position (0-100).',
     'endpoint.noteThermostat': 'Otra acción: "set_hvac_mode" con params.hvac_mode.',
     'endpoint.noteSensor': 'Los sensores son de solo lectura, no aceptan acciones.',
+    'endpoint.noteAutomation': 'Ejecuta la automatización saltándose sus condiciones (equivalente a "Ejecutar" en Home Assistant).',
     'endpoint.noKey': 'No hay WEBHOOK_API_KEY configurada en el servidor. Añádela en el .env y reinicia el contenedor.',
     'endpoint.urlLabel': 'URL (POST)',
     'endpoint.headerLabel': 'Cabecera',
@@ -311,6 +315,7 @@ const dict = {
     'deviceType.sensor': 'Sensor',
     'deviceType.pulse': 'Pulse',
     'deviceType.button': 'Button',
+    'deviceType.automation': 'Automation',
 
     'instanceSection.addDevice': 'Device',
     'instanceSection.edit': 'Edit',
@@ -338,6 +343,8 @@ const dict = {
     'card.openClose': 'Open / Close',
     'card.activate': 'Activate',
     'card.press': 'Press',
+    'card.runAutomation': 'Run automation',
+    'card.running': 'Running…',
 
     'endpoint.title': 'Endpoint for Shortcuts',
     'endpoint.session': 'Session',
@@ -347,6 +354,7 @@ const dict = {
       'Other actions: "close_cover", "stop_cover", or "set_cover_position" with params.position (0-100).',
     'endpoint.noteThermostat': 'Other action: "set_hvac_mode" with params.hvac_mode.',
     'endpoint.noteSensor': 'Sensors are read-only, they do not accept actions.',
+    'endpoint.noteAutomation': 'Runs the automation, skipping its conditions (equivalent to "Run" in Home Assistant).',
     'endpoint.noKey': 'No WEBHOOK_API_KEY is configured on the server. Add it to the .env and restart the container.',
     'endpoint.urlLabel': 'URL (POST)',
     'endpoint.headerLabel': 'Header',

@@ -59,6 +59,11 @@ async function performAction(device, instance, action, params = {}) {
         return ha.callService(instance, 'input_button', 'press', { entity_id });
       }
       return ha.callService(instance, 'button', 'press', { entity_id });
+    case 'trigger_automation':
+      if (domain === 'script') {
+        return ha.callService(instance, 'script', 'turn_on', { entity_id });
+      }
+      return ha.callService(instance, 'automation', 'trigger', { entity_id, skip_condition: true });
     default: {
       const err = new Error(`Acción desconocida: ${action}`);
       err.status = 400;

@@ -5,7 +5,8 @@ export type DeviceType =
   | 'garage_door'
   | 'sensor'
   | 'pulse'
-  | 'button';
+  | 'button'
+  | 'automation';
 
 export interface Instance {
   id: string;
@@ -105,4 +106,5 @@ export const DEVICE_TYPE_KEYS: Record<DeviceType, `deviceType.${DeviceType}`> = 
   sensor: 'deviceType.sensor',
   pulse: 'deviceType.pulse',
   button: 'deviceType.button',
+  automation: 'deviceType.automation',
 };

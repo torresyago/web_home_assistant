@@ -25,6 +25,8 @@ function defaultAction(device: Device, t: (key: TranslationKey) => string): { ac
       };
     case 'sensor':
       return { action: '', note: t('endpoint.noteSensor') };
+    case 'automation':
+      return { action: 'trigger_automation', note: t('endpoint.noteAutomation') };
     default:
       return { action: 'toggle' };
   }

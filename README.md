@@ -2,7 +2,9 @@
 
 *[Read this in English](#english) ↓*
 
-Aplicación web para controlar dispositivos de una o varias instancias de Home Assistant desde un panel visual, pensada para ejecutarse en Docker. El modelo de "cosas" (things) sigue la misma idea que [homebridge-homeassistant-things](https://github.com/torresyago/homebridge-homeassistant-things): defines dispositivos apuntando a una entidad de Home Assistant y un tipo de control.
+**HA Things** es un panel web ligero, propio y auto-alojado para controlar y automatizar tu casa a través de Home Assistant — sin depender de la app oficial ni de acceso remoto complicado. Conecta una o varias instancias de Home Assistant, elige qué dispositivos y automatizaciones quieres exponer, y ya tienes un panel de control accesible desde cualquier navegador, con integración nativa para **Atajos de iOS** (control por voz con Siri, widgets, automatizaciones del propio iPhone) mediante un endpoint webhook seguro. Pensado para ejecutarse en Docker en tu propia red o detrás de tu proxy, con foco en seguridad (mTLS, API keys, cuarentena por fuerza bruta) y en no depender de terceros para controlar tu hogar.
+
+El modelo de "cosas" (things) sigue la misma idea que [homebridge-homeassistant-things](https://github.com/torresyago/homebridge-homeassistant-things): defines dispositivos apuntando a una entidad de Home Assistant y un tipo de control — pero además de operar dispositivos, HA Things también permite **ejecutar automatizaciones de Home Assistant** directamente desde el panel o desde un atajo de iOS, con un solo toque.
 
 ![Panel principal de HA Things](docs/screenshots/dashboard.png)
 
@@ -21,6 +23,7 @@ Aplicación web para controlar dispositivos de una o varias instancias de Home A
   - **Sensor**: lectura de solo lectura con su unidad.
   - **Pulso**: interruptor momentáneo que se apaga solo tras `pulseDuration` ms.
   - **Botón**: dispara `button.press` o `script.turn_on`.
+  - **Automatización**: ejecuta una `automation.*` de Home Assistant (`automation.trigger`, saltándose sus condiciones) o un `script.*`, con un solo toque — igual que el botón "Ejecutar" de Home Assistant.
 
   <img src="docs/screenshots/edit-device.png" alt="Editar dispositivo, eligiendo tipo" width="420">
 
@@ -33,28 +36,11 @@ Aplicación web para controlar dispositivos de una o varias instancias de Home A
 
 ## Puesta en marcha con Docker (recomendado)
 
-1. Copia el archivo de entorno de ejemplo:
+Dos formas de desplegarlo, según prefieras compilar tú mismo o usar la imagen ya publicada. En ambas, deja `ADMIN_USER`/`ADMIN_PASSWORD` vacíos en el `.env` si no quieres pedir login (pensado para uso en red local de confianza).
 
-   ```bash
-   cp .env.example .env
-   ```
+### Opción A: build local (clonando el repo)
 
-2. (Opcional) Edita `.env` para activar el login del panel y/o cambiar el secreto de sesión:
-
-   ```
-   ADMIN_USER=admin
-   ADMIN_PASSWORD=una-contraseña-fuerte
-   ```
-
-   Si dejas `ADMIN_USER`/`ADMIN_PASSWORD` vacíos, la app no pedirá login (pensado para uso en red local de confianza).
-
-3. Levanta el contenedor:
-
-   ```bash
-   docker compose up -d --build
-   ```
-
-### Ejemplo de `docker-compose.yml`
+Ejemplo de `docker-compose.yml` (construye la imagen desde el código, tal cual está en el repo):
 
 ```yaml
 services:
@@ -79,6 +65,53 @@ services:
 
 volumes:
   ha-things-data:
+```
+
+```bash
+git clone https://github.com/torresyago/web_home_assistant.git
+cd web_home_assistant
+cp .env.example .env   # y edítalo
+docker compose up -d --build
+```
+
+### Opción B: imagen publicada (sin clonar el código)
+
+Cada push a `main` publica automáticamente la imagen en GitHub Container Registry — no hace falta clonar el repo ni compilar nada, solo estos dos ficheros:
+
+`docker-compose.yml` (usa la imagen ya publicada en vez de construirla):
+
+```yaml
+services:
+  ha-things:
+    image: ghcr.io/torresyago/web_home_assistant:latest
+    container_name: ha-things
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SESSION_SECRET=${SESSION_SECRET:-changeme-session-secret}
+      - ADMIN_USER=${ADMIN_USER:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - AUTH_ALLOW_PASSWORD=${AUTH_ALLOW_PASSWORD:-true}
+      - AUTH_ALLOW_CERT=${AUTH_ALLOW_CERT:-true}
+      - ALLOWED_CERT_SERIALS=${ALLOWED_CERT_SERIALS:-}
+      - WEBHOOK_API_KEY=${WEBHOOK_API_KEY:-}
+      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-}
+    volumes:
+      - ha-things-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ha-things-data:
+```
+
+```bash
+mkdir ha-things && cd ha-things
+curl -O https://raw.githubusercontent.com/torresyago/web_home_assistant/main/docker-compose.ghcr.yml
+curl -O https://raw.githubusercontent.com/torresyago/web_home_assistant/main/.env.example
+mv docker-compose.ghcr.yml docker-compose.yml
+cp .env.example .env   # y edítalo
+docker compose up -d
 ```
 
 ### Ejemplo de `.env`
@@ -117,20 +150,9 @@ WEBHOOK_API_KEY=
 WEBHOOK_BASE_URL=
 ```
 
-Ambos ficheros ya existen en el repo ([`docker-compose.yml`](docker-compose.yml), [`.env.example`](.env.example)) — esto es solo para verlos sin tener que clonar el proyecto.
+Ambos ficheros ya existen en el repo ([`docker-compose.yml`](docker-compose.yml), [`docker-compose.ghcr.yml`](docker-compose.ghcr.yml), [`.env.example`](.env.example)).
 
-### Usando la imagen ya publicada (sin clonar el código)
-
-Cada push a `main` publica automáticamente la imagen en GitHub Container Registry. Puedes desplegarla directamente sin compilar nada:
-
-```bash
-curl -O https://raw.githubusercontent.com/torresyago/web_home_assistant/main/docker-compose.ghcr.yml
-curl -O https://raw.githubusercontent.com/torresyago/web_home_assistant/main/.env.example
-cp .env.example .env   # y edítalo
-docker compose -f docker-compose.ghcr.yml up -d
-```
-
-4. Abre [http://localhost:3000](http://localhost:3000).
+Con cualquiera de las dos opciones, abre después [http://localhost:3000](http://localhost:3000).
 
 Los datos (instancias y dispositivos configurados) se guardan en el volumen `ha-things-data`, persistente entre reinicios.
 
@@ -272,7 +294,9 @@ Notas:
 
 *[Leer esto en español](#ha-things) ↑*
 
-Web app to control devices from one or more Home Assistant instances through a visual panel, built to run in Docker. The "things" model follows the same idea as [homebridge-homeassistant-things](https://github.com/torresyago/homebridge-homeassistant-things): a device points to a Home Assistant entity plus a control type.
+**HA Things** is a lightweight, self-hosted web panel to control and automate your home through Home Assistant — no official app, no complicated remote access setup. Connect one or more Home Assistant instances, pick which devices and automations you want to expose, and you get a control panel reachable from any browser, with native **iOS Shortcuts** integration (voice control with Siri, widgets, your iPhone's own automations) via a secure webhook endpoint. Built to run in Docker on your own network or behind your reverse proxy, with a focus on security (mTLS, API keys, brute-force quarantine) and not depending on third parties to control your home.
+
+The "things" model follows the same idea as [homebridge-homeassistant-things](https://github.com/torresyago/homebridge-homeassistant-things): a device points to a Home Assistant entity plus a control type — but beyond operating devices, HA Things also lets you **run Home Assistant automations** directly from the panel or from an iOS shortcut, with a single tap.
 
 ![HA Things main panel](docs/screenshots/dashboard.png)
 
@@ -291,6 +315,7 @@ Web app to control devices from one or more Home Assistant instances through a v
   - **Sensor**: read-only reading with its unit.
   - **Pulse**: momentary switch that turns itself off after `pulseDuration` ms.
   - **Button**: triggers `button.press` or `script.turn_on`.
+  - **Automation**: runs a Home Assistant `automation.*` (`automation.trigger`, skipping its conditions) or a `script.*`, with a single tap — same as Home Assistant's "Run" button.
 
   <img src="docs/screenshots/edit-device.png" alt="Edit device, choosing its type" width="420">
 
@@ -303,28 +328,11 @@ Web app to control devices from one or more Home Assistant instances through a v
 
 ### Getting started with Docker (recommended)
 
-1. Copy the example environment file:
+Two ways to deploy it, depending on whether you'd rather build it yourself or use the published image. In either case, leave `ADMIN_USER`/`ADMIN_PASSWORD` empty in `.env` if you don't want to require login (intended for use on a trusted local network).
 
-   ```bash
-   cp .env.example .env
-   ```
+#### Option A: local build (cloning the repo)
 
-2. (Optional) Edit `.env` to enable panel login and/or change the session secret:
-
-   ```
-   ADMIN_USER=admin
-   ADMIN_PASSWORD=a-strong-password
-   ```
-
-   If you leave `ADMIN_USER`/`ADMIN_PASSWORD` empty, the app won't ask for login (intended for use on a trusted local network).
-
-3. Start the container:
-
-   ```bash
-   docker compose up -d --build
-   ```
-
-#### Example `docker-compose.yml`
+Example `docker-compose.yml` (builds the image from the code, as-is in the repo):
 
 ```yaml
 services:
@@ -349,6 +357,53 @@ services:
 
 volumes:
   ha-things-data:
+```
+
+```bash
+git clone https://github.com/torresyago/web_home_assistant.git
+cd web_home_assistant
+cp .env.example .env   # then edit it
+docker compose up -d --build
+```
+
+#### Option B: published image (without cloning the code)
+
+Every push to `main` automatically publishes the image to the GitHub Container Registry — no need to clone the repo or build anything, just these two files:
+
+`docker-compose.yml` (uses the already-published image instead of building it):
+
+```yaml
+services:
+  ha-things:
+    image: ghcr.io/torresyago/web_home_assistant:latest
+    container_name: ha-things
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SESSION_SECRET=${SESSION_SECRET:-changeme-session-secret}
+      - ADMIN_USER=${ADMIN_USER:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - AUTH_ALLOW_PASSWORD=${AUTH_ALLOW_PASSWORD:-true}
+      - AUTH_ALLOW_CERT=${AUTH_ALLOW_CERT:-true}
+      - ALLOWED_CERT_SERIALS=${ALLOWED_CERT_SERIALS:-}
+      - WEBHOOK_API_KEY=${WEBHOOK_API_KEY:-}
+      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-}
+    volumes:
+      - ha-things-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ha-things-data:
+```
+
+```bash
+mkdir ha-things && cd ha-things
+curl -O https://raw.githubusercontent.com/torresyago/web_home_assistant/main/docker-compose.ghcr.yml
+curl -O https://raw.githubusercontent.com/torresyago/web_home_assistant/main/.env.example
+mv docker-compose.ghcr.yml docker-compose.yml
+cp .env.example .env   # then edit it
+docker compose up -d
 ```
 
 #### Example `.env`
@@ -387,20 +442,9 @@ WEBHOOK_API_KEY=
 WEBHOOK_BASE_URL=
 ```
 
-Both files already exist in the repo ([`docker-compose.yml`](docker-compose.yml), [`.env.example`](.env.example)) — this is just so you can see them without cloning the project.
+Both files already exist in the repo ([`docker-compose.yml`](docker-compose.yml), [`docker-compose.ghcr.yml`](docker-compose.ghcr.yml), [`.env.example`](.env.example)).
 
-#### Using the published image (without cloning the code)
-
-Every push to `main` automatically publishes the image to the GitHub Container Registry. You can deploy it directly without building anything:
-
-```bash
-curl -O https://raw.githubusercontent.com/torresyago/web_home_assistant/main/docker-compose.ghcr.yml
-curl -O https://raw.githubusercontent.com/torresyago/web_home_assistant/main/.env.example
-cp .env.example .env   # then edit it
-docker compose -f docker-compose.ghcr.yml up -d
-```
-
-4. Open [http://localhost:3000](http://localhost:3000).
+Either way, open [http://localhost:3000](http://localhost:3000) afterwards.
 
 Data (configured instances and devices) is stored in the `ha-things-data` volume, persistent across restarts.
 
