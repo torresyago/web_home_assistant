@@ -73,6 +73,7 @@ const dict = {
     'security.removeCertSerial': 'Eliminar',
     'security.sourceApp': 'App',
     'security.envSerialHint': 'Definido en ALLOWED_CERT_SERIALS (.env); no se puede eliminar desde aquí, pero sí desactivar y etiquetar.',
+    'security.clickToLabel': 'Añadir nombre…',
 
     'instance.edit': 'Editar Home Assistant',
     'instance.add': 'Añadir Home Assistant',
@@ -240,6 +241,7 @@ const dict = {
     'security.removeCertSerial': 'Remove',
     'security.sourceApp': 'App',
     'security.envSerialHint': 'Defined in ALLOWED_CERT_SERIALS (.env); it can\'t be removed from here, but can be disabled and labeled.',
+    'security.clickToLabel': 'Add a label…',
 
     'instance.edit': 'Edit Home Assistant',
     'instance.add': 'Add Home Assistant',

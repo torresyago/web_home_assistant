@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft, KeyRound, Trash2, Lock } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft, KeyRound, Trash2, Lock, Pencil, Check } from 'lucide-react';
 import { api } from '../api';
 import { useLanguage } from '../i18n';
 import type { SecurityEvent, SecurityStats, QuarantineEntry, CertSerial } from '../types';
@@ -11,27 +11,48 @@ function formatTs(ts: number) {
   return new Date(ts).toLocaleString();
 }
 
-function CertLabelCell({ serial, label, onSave }: { serial: string; label: string; onSave: (serial: string, label: string) => void }) {
+function CertLabelCell({
+  serial,
+  label,
+  placeholder,
+  onSave,
+}: {
+  serial: string;
+  label: string;
+  placeholder: string;
+  onSave: (serial: string, label: string) => void;
+}) {
   const [value, setValue] = useState(label);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setValue(label);
   }, [label]);
 
   function commit() {
-    if (value.trim() !== label) onSave(serial, value.trim());
+    if (value.trim() !== label) {
+      onSave(serial, value.trim());
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    }
   }
 
   return (
-    <input
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={commit}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-      }}
-      className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-slate-300 hover:border-white/10 focus:border-white/20 focus:bg-base-900 focus:outline-none"
-    />
+    <div className="group relative">
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        }}
+        placeholder={placeholder}
+        className="w-full rounded-md border border-white/10 bg-base-900/60 px-2.5 py-1.5 pr-7 text-sm text-slate-200 placeholder:text-slate-600 hover:border-white/20 focus:border-accent-500/60 focus:outline-none"
+      />
+      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:opacity-0">
+        {saved ? <Check size={14} className="text-emerald-400" /> : <Pencil size={13} />}
+      </span>
+    </div>
   );
 }
 
@@ -347,7 +368,12 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
                     </td>
                     <td className="px-4 py-2 font-mono text-slate-200">{c.serial}</td>
                     <td className="px-2 py-1">
-                      <CertLabelCell serial={c.serial} label={c.label} onSave={handleSaveCertLabel} />
+                      <CertLabelCell
+                        serial={c.serial}
+                        label={c.label}
+                        placeholder={t('security.clickToLabel')}
+                        onSave={handleSaveCertLabel}
+                      />
                     </td>
                     <td className="px-4 py-2">
                       {c.source === 'env' ? (
