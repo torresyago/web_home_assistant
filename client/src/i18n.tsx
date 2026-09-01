@@ -67,8 +67,11 @@ const dict = {
     'security.noCertSerials': 'No hay certificados adicionales dados de alta',
     'security.colSerial': 'Serial',
     'security.colLabel': 'Nombre',
+    'security.colSource': 'Origen',
     'security.colAdded': 'Añadido',
     'security.removeCertSerial': 'Eliminar',
+    'security.sourceApp': 'App',
+    'security.envSerialHint': 'Definido en ALLOWED_CERT_SERIALS (.env); no se puede eliminar desde aquí, solo etiquetar.',
 
     'instance.edit': 'Editar Home Assistant',
     'instance.add': 'Añadir Home Assistant',
@@ -163,6 +166,9 @@ const dict = {
     'help.section4Title': '4. Panel de seguridad',
     'help.section4Body':
       'El botón "Seguridad" muestra accesos válidos/fallidos (últimos 15 min, última hora, histórico), permite resetear las estadísticas y gestionar manualmente qué IPs están en cuarentena.',
+    'help.section5Title': '5. Certificados de cliente autorizados',
+    'help.section5Body':
+      'Hay dos formas de autorizar un certificado: (1) en el .env del servidor, variable ALLOWED_CERT_SERIALS con los seriales separados por comas (requiere reiniciar el contenedor tras editarla) — estos aparecen en el panel de Seguridad marcados como ".env", puedes ponerles un nombre pero no eliminarlos desde aquí; (2) desde el propio panel de Seguridad, sección "Certificados autorizados": pega el serial y opcionalmente un nombre y pulsa "Añadir" — se aplica al instante, sin reiniciar nada, y puedes eliminarlos cuando quieras con el botón correspondiente. El certificado también debe estar aceptado en la configuración de nginx/proxy inverso (mTLS) para llegar a la app; ver el README del proyecto para el ejemplo de configuración.',
     'help.close': 'Cerrar',
   },
   en: {
@@ -227,8 +233,11 @@ const dict = {
     'security.noCertSerials': 'No additional certificates registered',
     'security.colSerial': 'Serial',
     'security.colLabel': 'Label',
+    'security.colSource': 'Source',
     'security.colAdded': 'Added',
     'security.removeCertSerial': 'Remove',
+    'security.sourceApp': 'App',
+    'security.envSerialHint': 'Defined in ALLOWED_CERT_SERIALS (.env); it can\'t be removed from here, only labeled.',
 
     'instance.edit': 'Edit Home Assistant',
     'instance.add': 'Add Home Assistant',
@@ -323,6 +332,9 @@ const dict = {
     'help.section4Title': '4. Security panel',
     'help.section4Body':
       'The "Security" button shows valid/failed access attempts (last 15 min, last hour, all time), lets you reset the stats, and manually manage which IPs are quarantined.',
+    'help.section5Title': '5. Authorized client certificates',
+    'help.section5Body':
+      'There are two ways to authorize a certificate: (1) in the server\'s .env, the ALLOWED_CERT_SERIALS variable with serials separated by commas (requires restarting the container after editing) — these show up in the Security panel marked as ".env"; you can give them a label but not remove them from there; (2) from the Security panel itself, "Authorized certificates" section: paste the serial and optionally a label, then click "Add" — it applies instantly, no restart needed, and you can remove them anytime with the corresponding button. The certificate also needs to be accepted in the nginx/reverse-proxy config (mTLS) to reach the app; see the project README for a config example.',
     'help.close': 'Close',
   },
 } as const;

@@ -3,23 +3,6 @@ const certSerials = require('../services/certSerials');
 const CERT_SERIAL_HEADER = (process.env.CERT_SERIAL_HEADER || 'x-ssl-client-serial').toLowerCase();
 const CERT_VERIFY_HEADER = (process.env.CERT_VERIFY_HEADER || 'x-ssl-client-verify').toLowerCase();
 
-function normalizeSerial(serial) {
-  return String(serial).toUpperCase().replace(/[^0-9A-F]/g, '');
-}
-
-// Lista base opcional vía env (compatibilidad con despliegues existentes); la
-// lista gestionable desde la propia app (panel de Seguridad) se añade a esta.
-const ENV_ALLOWED_CERT_SERIALS = (process.env.ALLOWED_CERT_SERIALS || '')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean)
-  .map(normalizeSerial);
-
-function allowedCertSerials() {
-  const fromDb = certSerials.list().map((c) => c.serial);
-  return [...new Set([...ENV_ALLOWED_CERT_SERIALS, ...fromDb])];
-}
-
 function authEnabled() {
   return Boolean(process.env.ADMIN_USER && process.env.ADMIN_PASSWORD);
 }
@@ -31,8 +14,8 @@ function certAuthenticated(req) {
   if (!serial) return false;
   const verify = req.headers[CERT_VERIFY_HEADER];
   if (verify && verify.toUpperCase() !== 'SUCCESS') return false;
-  const allowed = allowedCertSerials();
-  if (allowed.length > 0 && !allowed.includes(normalizeSerial(serial))) {
+  const allowed = certSerials.allowed();
+  if (allowed.length > 0 && !allowed.includes(certSerials.normalize(serial))) {
     return false;
   }
   return true;

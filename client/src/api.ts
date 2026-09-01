@@ -57,6 +57,11 @@ export const api = {
   certSerialsList: () => request<CertSerial[]>('/security/cert-serials'),
   certSerialsAdd: (serial: string, label: string) =>
     request<CertSerial>('/security/cert-serials', { method: 'POST', body: JSON.stringify({ serial, label }) }),
+  certSerialsSetLabel: (serial: string, label: string) =>
+    request<{ ok: true }>(`/security/cert-serials/${encodeURIComponent(serial)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ label }),
+    }),
   certSerialsRemove: (serial: string) =>
     request<{ ok: true }>(`/security/cert-serials/${encodeURIComponent(serial)}`, { method: 'DELETE' }),
 };

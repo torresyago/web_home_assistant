@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft, KeyRound, Trash2 } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft, KeyRound, Trash2, Lock } from 'lucide-react';
 import { api } from '../api';
 import { useLanguage } from '../i18n';
 import type { SecurityEvent, SecurityStats, QuarantineEntry, CertSerial } from '../types';
@@ -9,6 +9,30 @@ import ThemeToggle from '../components/ThemeToggle';
 
 function formatTs(ts: number) {
   return new Date(ts).toLocaleString();
+}
+
+function CertLabelCell({ serial, label, onSave }: { serial: string; label: string; onSave: (serial: string, label: string) => void }) {
+  const [value, setValue] = useState(label);
+
+  useEffect(() => {
+    setValue(label);
+  }, [label]);
+
+  function commit() {
+    if (value.trim() !== label) onSave(serial, value.trim());
+  }
+
+  return (
+    <input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+      }}
+      className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-slate-300 hover:border-white/10 focus:border-white/20 focus:bg-base-900 focus:outline-none"
+    />
+  );
 }
 
 function StatCard({ title, valid, failed, validLabel, failedLabel }: { title: string; valid: number; failed: number; validLabel: string; failedLabel: string }) {
@@ -102,8 +126,23 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
   }
 
   async function handleRemoveCertSerial(serial: string) {
-    await api.certSerialsRemove(serial);
-    load();
+    setSerialError(null);
+    try {
+      await api.certSerialsRemove(serial);
+      load();
+    } catch (err: any) {
+      setSerialError(err.message);
+    }
+  }
+
+  async function handleSaveCertLabel(serial: string, label: string) {
+    setSerialError(null);
+    try {
+      await api.certSerialsSetLabel(serial, label);
+      load();
+    } catch (err: any) {
+      setSerialError(err.message);
+    }
   }
 
   return (
@@ -265,6 +304,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
                 <tr>
                   <th className="px-4 py-2">{t('security.colSerial')}</th>
                   <th className="px-4 py-2">{t('security.colLabel')}</th>
+                  <th className="px-4 py-2">{t('security.colSource')}</th>
                   <th className="px-4 py-2">{t('security.colAdded')}</th>
                   <th className="px-4 py-2"></th>
                 </tr>
@@ -273,15 +313,37 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
                 {certSerials.map((c) => (
                   <tr key={c.serial}>
                     <td className="px-4 py-2 font-mono text-slate-200">{c.serial}</td>
-                    <td className="px-4 py-2 text-slate-400">{c.label || '—'}</td>
-                    <td className="px-4 py-2 text-slate-400">{formatTs(c.addedAt)}</td>
+                    <td className="px-2 py-1">
+                      <CertLabelCell serial={c.serial} label={c.label} onSave={handleSaveCertLabel} />
+                    </td>
+                    <td className="px-4 py-2">
+                      {c.source === 'env' ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-xs text-slate-400">
+                          .env
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent-500/15 px-2 py-0.5 text-xs text-accent-400">
+                          {t('security.sourceApp')}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 text-slate-400">{c.addedAt ? formatTs(c.addedAt) : '—'}</td>
                     <td className="px-4 py-2 text-right">
-                      <button
-                        onClick={() => handleRemoveCertSerial(c.serial)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/10"
-                      >
-                        <Trash2 size={14} /> {t('security.removeCertSerial')}
-                      </button>
+                      {c.source === 'env' ? (
+                        <span
+                          title={t('security.envSerialHint')}
+                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs text-slate-600"
+                        >
+                          <Lock size={14} />
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleRemoveCertSerial(c.serial)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/10"
+                        >
+                          <Trash2 size={14} /> {t('security.removeCertSerial')}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

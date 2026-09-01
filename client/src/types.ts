@@ -71,7 +71,8 @@ export interface QuarantineEntry {
 export interface CertSerial {
   serial: string;
   label: string;
-  addedAt: number;
+  addedAt: number | null;
+  source: 'env' | 'app';
 }
 
 export const DEVICE_TYPE_KEYS: Record<DeviceType, `deviceType.${DeviceType}`> = {

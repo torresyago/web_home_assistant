@@ -57,9 +57,23 @@ router.post('/cert-serials', (req, res) => {
   }
 });
 
+router.put('/cert-serials/:serial', (req, res) => {
+  const { label } = req.body || {};
+  try {
+    certSerials.setLabel(req.params.serial, label);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 router.delete('/cert-serials/:serial', (req, res) => {
-  certSerials.remove(req.params.serial);
-  res.json({ ok: true });
+  try {
+    certSerials.remove(req.params.serial);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 module.exports = router;
