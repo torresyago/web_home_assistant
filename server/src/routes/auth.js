@@ -1,5 +1,5 @@
 const express = require('express');
-const { authEnabled, certAuthenticated } = require('../middleware/auth');
+const { authEnabled, certAuthenticated, certInfo } = require('../middleware/auth');
 const { checkQuarantine, registerFailure, registerSuccess, getClientIp } = require('../middleware/quarantine');
 
 const router = express.Router();
@@ -7,11 +7,12 @@ const router = express.Router();
 router.get('/status', (req, res) => {
   if (certAuthenticated(req)) {
     if (req.session) req.session.authenticated = true;
-    return res.json({ authEnabled: authEnabled(), authenticated: true });
+    return res.json({ authEnabled: authEnabled(), authenticated: true, cert: certInfo(req) });
   }
   res.json({
     authEnabled: authEnabled(),
     authenticated: authEnabled() ? Boolean(req.session && req.session.authenticated) : true,
+    cert: null,
   });
 });
 

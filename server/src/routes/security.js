@@ -58,9 +58,9 @@ router.post('/cert-serials', (req, res) => {
 });
 
 router.put('/cert-serials/:serial', (req, res) => {
-  const { label } = req.body || {};
+  const { label, enabled } = req.body || {};
   try {
-    certSerials.setLabel(req.params.serial, label);
+    certSerials.update(req.params.serial, { label, enabled });
     res.json({ ok: true });
   } catch (err) {
     res.status(400).json({ error: err.message });

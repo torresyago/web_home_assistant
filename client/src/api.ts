@@ -1,4 +1,4 @@
-import type { Device, DeviceStates, EntityOption, Instance, SecurityEvent, SecurityStats, QuarantineEntry, CertSerial } from './types';
+import type { Device, DeviceStates, EntityOption, Instance, SecurityEvent, SecurityStats, QuarantineEntry, CertSerial, AuthStatus } from './types';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`/api${path}`, {
@@ -20,7 +20,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  authStatus: () => request<{ authEnabled: boolean; authenticated: boolean }>('/auth/status'),
+  authStatus: () => request<AuthStatus>('/auth/status'),
   login: (username: string, password: string) =>
     request<{ ok: true }>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   logout: () => request<{ ok: true }>('/auth/logout', { method: 'POST' }),
@@ -61,6 +61,11 @@ export const api = {
     request<{ ok: true }>(`/security/cert-serials/${encodeURIComponent(serial)}`, {
       method: 'PUT',
       body: JSON.stringify({ label }),
+    }),
+  certSerialsSetEnabled: (serial: string, enabled: boolean) =>
+    request<{ ok: true }>(`/security/cert-serials/${encodeURIComponent(serial)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ enabled }),
     }),
   certSerialsRemove: (serial: string) =>
     request<{ ok: true }>(`/security/cert-serials/${encodeURIComponent(serial)}`, { method: 'DELETE' }),

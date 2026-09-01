@@ -73,6 +73,18 @@ export interface CertSerial {
   label: string;
   addedAt: number | null;
   source: 'env' | 'app';
+  enabled: boolean;
+}
+
+export interface ActiveCert {
+  serial: string;
+  label: string;
+}
+
+export interface AuthStatus {
+  authEnabled: boolean;
+  authenticated: boolean;
+  cert: ActiveCert | null;
 }
 
 export const DEVICE_TYPE_KEYS: Record<DeviceType, `deviceType.${DeviceType}`> = {

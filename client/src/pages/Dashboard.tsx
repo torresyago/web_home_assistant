@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { HelpCircle, Home, LogOut, Plus, ShieldCheck } from 'lucide-react';
 import { api } from '../api';
 import { useLanguage } from '../i18n';
-import type { Device, DeviceStates, Instance } from '../types';
+import type { ActiveCert, Device, DeviceStates, Instance } from '../types';
 import InstanceSection from '../components/InstanceSection';
 import InstanceModal from '../components/InstanceModal';
 import DeviceModal from '../components/DeviceModal';
@@ -12,7 +12,15 @@ import ThemeToggle from '../components/ThemeToggle';
 import HelpModal from '../components/HelpModal';
 import SecurityPanel from './SecurityPanel';
 
-export default function Dashboard({ authEnabled, onLogout }: { authEnabled: boolean; onLogout: () => void }) {
+export default function Dashboard({
+  authEnabled,
+  cert,
+  onLogout,
+}: {
+  authEnabled: boolean;
+  cert: ActiveCert | null;
+  onLogout: () => void;
+}) {
   const { t } = useLanguage();
   const [view, setView] = useState<'devices' | 'security'>('devices');
   const [instances, setInstances] = useState<Instance[]>([]);
@@ -98,6 +106,15 @@ export default function Dashboard({ authEnabled, onLogout }: { authEnabled: bool
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {cert && (
+            <div
+              title={cert.serial}
+              className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300"
+            >
+              <span className="h-2 w-2 shrink-0 animate-blink rounded-full bg-emerald-500 shadow-[0_0_6px_2px_rgba(16,185,129,0.6)]" />
+              {cert.label || cert.serial}
+            </div>
+          )}
           <ThemeToggle />
           <LanguageSwitch />
           <button

@@ -14,11 +14,13 @@ function certAuthenticated(req) {
   if (!serial) return false;
   const verify = req.headers[CERT_VERIFY_HEADER];
   if (verify && verify.toUpperCase() !== 'SUCCESS') return false;
+  // Si no hay ningún serial registrado (ni en .env ni en la app), no se aplica
+  // esta segunda capa (modo legacy: solo se confía en el proxy). En cuanto
+  // existe al menos un serial conocido, solo pasan los que estén activos —
+  // desactivarlos todos debe bloquear, no abrir la puerta a cualquier cert.
+  if (certSerials.known().length === 0) return true;
   const allowed = certSerials.allowed();
-  if (allowed.length > 0 && !allowed.includes(certSerials.normalize(serial))) {
-    return false;
-  }
-  return true;
+  return allowed.includes(certSerials.normalize(serial));
 }
 
 function requireAuth(req, res, next) {
@@ -31,4 +33,15 @@ function requireAuth(req, res, next) {
   return res.status(401).json({ error: 'No autenticado' });
 }
 
-module.exports = { requireAuth, authEnabled, certAuthenticated };
+// Certificado (si lo hay) que está autenticando la petición actual, con su
+// etiqueta si tiene una asignada. Para mostrar en la UI qué certificado está
+// en uso en la sesión.
+function certInfo(req) {
+  if (!certAuthenticated(req)) return null;
+  const serial = certSerials.normalize(req.headers[CERT_SERIAL_HEADER]);
+  if (!serial) return null;
+  const entry = certSerials.list().find((c) => c.serial === serial);
+  return { serial, label: entry ? entry.label : '' };
+}
+
+module.exports = { requireAuth, authEnabled, certAuthenticated, certInfo };

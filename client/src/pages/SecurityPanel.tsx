@@ -35,6 +35,23 @@ function CertLabelCell({ serial, label, onSave }: { serial: string; label: strin
   );
 }
 
+function MiniSwitch({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${checked ? 'bg-accent-500' : 'bg-base-700'}`}
+    >
+      <span
+        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+          checked ? 'translate-x-4' : 'translate-x-0'
+        }`}
+      />
+    </button>
+  );
+}
+
 function StatCard({ title, valid, failed, validLabel, failedLabel }: { title: string; valid: number; failed: number; validLabel: string; failedLabel: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-base-900 p-5">
@@ -142,6 +159,18 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
       load();
     } catch (err: any) {
       setSerialError(err.message);
+    }
+  }
+
+  async function handleToggleCertEnabled(serial: string, enabled: boolean) {
+    setSerialError(null);
+    setCertSerials((prev) => prev.map((c) => (c.serial === serial ? { ...c, enabled } : c)));
+    try {
+      await api.certSerialsSetEnabled(serial, enabled);
+      load();
+    } catch (err: any) {
+      setSerialError(err.message);
+      load();
     }
   }
 
@@ -302,6 +331,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
             <table className="w-full text-sm">
               <thead className="bg-white/5 text-left text-xs uppercase text-slate-500">
                 <tr>
+                  <th className="px-4 py-2">{t('security.colActive')}</th>
                   <th className="px-4 py-2">{t('security.colSerial')}</th>
                   <th className="px-4 py-2">{t('security.colLabel')}</th>
                   <th className="px-4 py-2">{t('security.colSource')}</th>
@@ -311,7 +341,10 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {certSerials.map((c) => (
-                  <tr key={c.serial}>
+                  <tr key={c.serial} className={c.enabled ? '' : 'opacity-50'}>
+                    <td className="px-4 py-2">
+                      <MiniSwitch checked={c.enabled} onChange={(value) => handleToggleCertEnabled(c.serial, value)} />
+                    </td>
                     <td className="px-4 py-2 font-mono text-slate-200">{c.serial}</td>
                     <td className="px-2 py-1">
                       <CertLabelCell serial={c.serial} label={c.label} onSave={handleSaveCertLabel} />

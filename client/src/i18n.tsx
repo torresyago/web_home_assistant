@@ -65,13 +65,14 @@ const dict = {
     'security.certLabelPlaceholder': 'Nombre (opcional)',
     'security.addCertSerial': 'Añadir',
     'security.noCertSerials': 'No hay certificados adicionales dados de alta',
+    'security.colActive': 'Activo',
     'security.colSerial': 'Serial',
     'security.colLabel': 'Nombre',
     'security.colSource': 'Origen',
     'security.colAdded': 'Añadido',
     'security.removeCertSerial': 'Eliminar',
     'security.sourceApp': 'App',
-    'security.envSerialHint': 'Definido en ALLOWED_CERT_SERIALS (.env); no se puede eliminar desde aquí, solo etiquetar.',
+    'security.envSerialHint': 'Definido en ALLOWED_CERT_SERIALS (.env); no se puede eliminar desde aquí, pero sí desactivar y etiquetar.',
 
     'instance.edit': 'Editar Home Assistant',
     'instance.add': 'Añadir Home Assistant',
@@ -168,7 +169,7 @@ const dict = {
       'El botón "Seguridad" muestra accesos válidos/fallidos (últimos 15 min, última hora, histórico), permite resetear las estadísticas y gestionar manualmente qué IPs están en cuarentena.',
     'help.section5Title': '5. Certificados de cliente autorizados',
     'help.section5Body':
-      'Hay dos formas de autorizar un certificado: (1) en el .env del servidor, variable ALLOWED_CERT_SERIALS con los seriales separados por comas (requiere reiniciar el contenedor tras editarla) — estos aparecen en el panel de Seguridad marcados como ".env", puedes ponerles un nombre pero no eliminarlos desde aquí; (2) desde el propio panel de Seguridad, sección "Certificados autorizados": pega el serial y opcionalmente un nombre y pulsa "Añadir" — se aplica al instante, sin reiniciar nada, y puedes eliminarlos cuando quieras con el botón correspondiente. El certificado también debe estar aceptado en la configuración de nginx/proxy inverso (mTLS) para llegar a la app; ver el README del proyecto para el ejemplo de configuración.',
+      'Hay dos formas de autorizar un certificado: (1) en el .env del servidor, variable ALLOWED_CERT_SERIALS con los seriales separados por comas (requiere reiniciar el contenedor tras editarla) — estos aparecen en el panel de Seguridad marcados como ".env"; (2) desde el propio panel de Seguridad, sección "Certificados autorizados": pega el serial y opcionalmente un nombre y pulsa "Añadir" — se aplica al instante, sin reiniciar nada. Para cualquiera de los dos, sea de .env o de la app, puedes ponerle un nombre (haz clic en el campo y escribe) y activarlo/desactivarlo con el interruptor sin necesidad de eliminarlo — un certificado desactivado deja de dar acceso al instante. Solo los añadidos desde la app se pueden eliminar por completo con el botón de la papelera; los de .env requieren editar el .env y reiniciar para quitarlos del todo. Cuando entras con un certificado, verás un indicador con un punto verde parpadeante junto a tu nombre (o el serial) en la cabecera de la app, mostrando qué certificado está autenticando tu sesión actual. El certificado también debe estar aceptado en la configuración de nginx/proxy inverso (mTLS) para llegar a la app; ver el README del proyecto para el ejemplo de configuración.',
     'help.close': 'Cerrar',
   },
   en: {
@@ -231,13 +232,14 @@ const dict = {
     'security.certLabelPlaceholder': 'Label (optional)',
     'security.addCertSerial': 'Add',
     'security.noCertSerials': 'No additional certificates registered',
+    'security.colActive': 'Active',
     'security.colSerial': 'Serial',
     'security.colLabel': 'Label',
     'security.colSource': 'Source',
     'security.colAdded': 'Added',
     'security.removeCertSerial': 'Remove',
     'security.sourceApp': 'App',
-    'security.envSerialHint': 'Defined in ALLOWED_CERT_SERIALS (.env); it can\'t be removed from here, only labeled.',
+    'security.envSerialHint': 'Defined in ALLOWED_CERT_SERIALS (.env); it can\'t be removed from here, but can be disabled and labeled.',
 
     'instance.edit': 'Edit Home Assistant',
     'instance.add': 'Add Home Assistant',
@@ -334,7 +336,7 @@ const dict = {
       'The "Security" button shows valid/failed access attempts (last 15 min, last hour, all time), lets you reset the stats, and manually manage which IPs are quarantined.',
     'help.section5Title': '5. Authorized client certificates',
     'help.section5Body':
-      'There are two ways to authorize a certificate: (1) in the server\'s .env, the ALLOWED_CERT_SERIALS variable with serials separated by commas (requires restarting the container after editing) — these show up in the Security panel marked as ".env"; you can give them a label but not remove them from there; (2) from the Security panel itself, "Authorized certificates" section: paste the serial and optionally a label, then click "Add" — it applies instantly, no restart needed, and you can remove them anytime with the corresponding button. The certificate also needs to be accepted in the nginx/reverse-proxy config (mTLS) to reach the app; see the project README for a config example.',
+      'There are two ways to authorize a certificate: (1) in the server\'s .env, the ALLOWED_CERT_SERIALS variable with serials separated by commas (requires restarting the container after editing) — these show up in the Security panel marked as ".env"; (2) from the Security panel itself, "Authorized certificates" section: paste the serial and optionally a label, then click "Add" — it applies instantly, no restart needed. Either way, whether it came from .env or the app, you can give it a label (click the field and type) and toggle it on/off with the switch without deleting it — a disabled certificate stops granting access instantly. Only app-added ones can be fully deleted with the trash button; .env ones require editing .env and restarting to remove them entirely. When you sign in with a certificate, you\'ll see an indicator with a blinking green dot next to your name (or serial) in the app header, showing which certificate is authenticating your current session. The certificate also needs to be accepted in the nginx/reverse-proxy config (mTLS) to reach the app; see the project README for a config example.',
     'help.close': 'Close',
   },
 } as const;
