@@ -10,15 +10,28 @@ export default function App() {
   const [status, setStatus] = useState<AuthStatus | null>(null);
 
   useEffect(() => {
-    api.authStatus().then(setStatus).catch(() => setStatus({ authEnabled: false, authenticated: true, cert: null }));
+    api
+      .authStatus()
+      .then(setStatus)
+      .catch(() => setStatus({ authEnabled: false, passwordLoginAllowed: false, authenticated: true, cert: null }));
   }, []);
 
   if (!status) {
     return <div className="flex min-h-screen items-center justify-center text-slate-500">{t('app.loading')}</div>;
   }
 
-  if (status.authEnabled && !status.authenticated) {
-    return <Login onSuccess={() => setStatus({ ...status, authenticated: true })} />;
+  if (!status.authenticated) {
+    if (status.passwordLoginAllowed) {
+      return <Login onSuccess={() => setStatus({ ...status, authenticated: true })} />;
+    }
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="max-w-sm rounded-2xl border border-white/10 bg-base-900 p-6 text-center">
+          <p className="mb-2 text-lg font-semibold text-white">{t('app.accessDeniedTitle')}</p>
+          <p className="text-sm text-slate-400">{t('app.accessDeniedBody')}</p>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft, KeyRound, Trash2, Lock, Pencil, Check } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft, KeyRound, Trash2, Lock, Pencil, Check, KeySquare } from 'lucide-react';
 import { api } from '../api';
 import { useLanguage } from '../i18n';
-import type { SecurityEvent, SecurityStats, QuarantineEntry, CertSerial } from '../types';
+import type { SecurityEvent, SecurityStats, QuarantineEntry, CertSerial, AuthMethodSettings } from '../types';
 import ConfirmDialog from '../components/ConfirmDialog';
 import LanguageSwitch from '../components/LanguageSwitch';
 import ThemeToggle from '../components/ThemeToggle';
@@ -97,6 +97,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
   const [log, setLog] = useState<SecurityEvent[]>([]);
   const [quarantine, setQuarantine] = useState<QuarantineEntry[]>([]);
   const [certSerials, setCertSerials] = useState<CertSerial[]>([]);
+  const [authMethods, setAuthMethods] = useState<AuthMethodSettings | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [newIp, setNewIp] = useState('');
   const [newMinutes, setNewMinutes] = useState(15);
@@ -106,16 +107,18 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
   const [serialError, setSerialError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [s, l, q, c] = await Promise.all([
+    const [s, l, q, c, a] = await Promise.all([
       api.securityStats(),
       api.securityLog(200),
       api.quarantineList(),
       api.certSerialsList(),
+      api.authSettings(),
     ]);
     setStats(s);
     setLog(l);
     setQuarantine(q);
     setCertSerials(c);
+    setAuthMethods(a);
   }, []);
 
   useEffect(() => {
@@ -249,6 +252,41 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
             failedLabel={t('security.failed')}
           />
         </div>
+      )}
+
+      {authMethods && (
+        <section className="mb-10">
+          <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-white">
+            <KeySquare size={16} className="text-accent-400" /> {t('security.authMethodsTitle')}
+          </h2>
+          <p className="mb-3 text-xs text-slate-500">{t('security.authMethodsHint')}</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-base-900 p-4">
+              <span className="text-sm text-slate-300">{t('security.methodPassword')}</span>
+              {authMethods.allowPassword ? (
+                <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-400">
+                  {t('security.methodActive')}
+                </span>
+              ) : (
+                <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-500">
+                  {t('security.methodInactive')}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-base-900 p-4">
+              <span className="text-sm text-slate-300">{t('security.methodCert')}</span>
+              {authMethods.allowCert ? (
+                <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-400">
+                  {t('security.methodActive')}
+                </span>
+              ) : (
+                <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-500">
+                  {t('security.methodInactive')}
+                </span>
+              )}
+            </div>
+          </div>
+        </section>
       )}
 
       <section className="mb-10">

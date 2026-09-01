@@ -84,8 +84,14 @@ export interface ActiveCert {
 
 export interface AuthStatus {
   authEnabled: boolean;
+  passwordLoginAllowed: boolean;
   authenticated: boolean;
   cert: ActiveCert | null;
+}
+
+export interface AuthMethodSettings {
+  allowPassword: boolean;
+  allowCert: boolean;
 }
 
 export const DEVICE_TYPE_KEYS: Record<DeviceType, `deviceType.${DeviceType}`> = {

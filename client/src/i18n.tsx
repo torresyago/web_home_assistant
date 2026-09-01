@@ -7,6 +7,8 @@ const STORAGE_KEY = 'ha-things-lang';
 const dict = {
   es: {
     'app.loading': 'Cargando…',
+    'app.accessDeniedTitle': 'Acceso restringido',
+    'app.accessDeniedBody': 'El acceso por contraseña está desactivado. Necesitas un certificado de cliente autorizado para entrar.',
 
     'login.subtitle': 'Inicia sesión para controlar tus dispositivos',
     'login.username': 'Usuario',
@@ -74,6 +76,12 @@ const dict = {
     'security.sourceApp': 'App',
     'security.envSerialHint': 'Definido en ALLOWED_CERT_SERIALS (.env); no se puede eliminar desde aquí, pero sí desactivar y etiquetar.',
     'security.clickToLabel': 'Añadir nombre…',
+    'security.authMethodsTitle': 'Métodos de acceso',
+    'security.authMethodsHint': 'Se configuran a nivel de contenedor (variables AUTH_ALLOW_PASSWORD / AUTH_ALLOW_CERT); aquí solo se muestra el estado actual.',
+    'security.methodPassword': 'Acceso con usuario y contraseña',
+    'security.methodCert': 'Acceso con certificado de cliente',
+    'security.methodActive': 'Activo',
+    'security.methodInactive': 'Inactivo',
 
     'instance.edit': 'Editar Home Assistant',
     'instance.add': 'Añadir Home Assistant',
@@ -173,10 +181,15 @@ const dict = {
     'help.section5Title': '5. Certificados de cliente autorizados',
     'help.section5Body':
       'Hay dos formas de autorizar un certificado: (1) en el .env del servidor, variable ALLOWED_CERT_SERIALS con los seriales separados por comas (requiere reiniciar el contenedor tras editarla) — estos aparecen en el panel de Seguridad marcados como ".env"; (2) desde el propio panel de Seguridad, sección "Certificados autorizados": pega el serial y opcionalmente un nombre y pulsa "Añadir" — se aplica al instante, sin reiniciar nada. Para cualquiera de los dos, sea de .env o de la app, puedes ponerle un nombre (haz clic en el campo y escribe) y activarlo/desactivarlo con el interruptor sin necesidad de eliminarlo — un certificado desactivado deja de dar acceso al instante. Solo los añadidos desde la app se pueden eliminar por completo con el botón de la papelera; los de .env requieren editar el .env y reiniciar para quitarlos del todo. Cuando entras con un certificado, verás un indicador con un punto verde parpadeante junto a tu nombre (o el serial) en la cabecera de la app, mostrando qué certificado está autenticando tu sesión actual. El certificado también debe estar aceptado en la configuración de nginx/proxy inverso (mTLS) para llegar a la app; ver el README del proyecto para el ejemplo de configuración.',
+    'help.section6Title': '6. Métodos de acceso permitidos',
+    'help.section6Body':
+      'La sección "Métodos de acceso" del panel de Seguridad muestra si el login por contraseña y el acceso por certificado están activos o inactivos. Es solo informativo: se controla a nivel de contenedor con las variables de entorno AUTH_ALLOW_PASSWORD y AUTH_ALLOW_CERT (ambas activas por defecto) — para cambiarlo hay que editar el .env y reiniciar el contenedor, no se puede desde la web. Si desactivas el acceso por contraseña, la app deja de mostrar el formulario de login y solo entra quien tenga un certificado autorizado; debe quedar al menos un método activo.',
     'help.close': 'Cerrar',
   },
   en: {
     'app.loading': 'Loading…',
+    'app.accessDeniedTitle': 'Access restricted',
+    'app.accessDeniedBody': 'Password login is disabled. You need an authorized client certificate to get in.',
 
     'login.subtitle': 'Sign in to control your devices',
     'login.username': 'Username',
@@ -244,6 +257,12 @@ const dict = {
     'security.sourceApp': 'App',
     'security.envSerialHint': 'Defined in ALLOWED_CERT_SERIALS (.env); it can\'t be removed from here, but can be disabled and labeled.',
     'security.clickToLabel': 'Add a label…',
+    'security.authMethodsTitle': 'Access methods',
+    'security.authMethodsHint': 'Configured at the container level (AUTH_ALLOW_PASSWORD / AUTH_ALLOW_CERT env vars); this only shows the current status.',
+    'security.methodPassword': 'Username/password access',
+    'security.methodCert': 'Client certificate access',
+    'security.methodActive': 'Active',
+    'security.methodInactive': 'Inactive',
 
     'instance.edit': 'Edit Home Assistant',
     'instance.add': 'Add Home Assistant',
@@ -343,6 +362,9 @@ const dict = {
     'help.section5Title': '5. Authorized client certificates',
     'help.section5Body':
       'There are two ways to authorize a certificate: (1) in the server\'s .env, the ALLOWED_CERT_SERIALS variable with serials separated by commas (requires restarting the container after editing) — these show up in the Security panel marked as ".env"; (2) from the Security panel itself, "Authorized certificates" section: paste the serial and optionally a label, then click "Add" — it applies instantly, no restart needed. Either way, whether it came from .env or the app, you can give it a label (click the field and type) and toggle it on/off with the switch without deleting it — a disabled certificate stops granting access instantly. Only app-added ones can be fully deleted with the trash button; .env ones require editing .env and restarting to remove them entirely. When you sign in with a certificate, you\'ll see an indicator with a blinking green dot next to your name (or serial) in the app header, showing which certificate is authenticating your current session. The certificate also needs to be accepted in the nginx/reverse-proxy config (mTLS) to reach the app; see the project README for a config example.',
+    'help.section6Title': '6. Allowed access methods',
+    'help.section6Body':
+      'The "Access methods" section of the Security panel shows whether password login and certificate access are active or inactive. It\'s informational only: it\'s controlled at the container level with the AUTH_ALLOW_PASSWORD and AUTH_ALLOW_CERT environment variables (both enabled by default) — changing it requires editing .env and restarting the container, not something you can do from the web. If you disable password login, the app stops showing the login form and only lets in someone with an authorized certificate; at least one method must stay enabled.',
     'help.close': 'Close',
   },
 } as const;

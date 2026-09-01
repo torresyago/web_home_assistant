@@ -1,4 +1,4 @@
-import type { Device, DeviceStates, EntityOption, Instance, SecurityEvent, SecurityStats, QuarantineEntry, CertSerial, AuthStatus } from './types';
+import type { Device, DeviceStates, EntityOption, Instance, SecurityEvent, SecurityStats, QuarantineEntry, CertSerial, AuthStatus, AuthMethodSettings } from './types';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`/api${path}`, {
@@ -69,4 +69,6 @@ export const api = {
     }),
   certSerialsRemove: (serial: string) =>
     request<{ ok: true }>(`/security/cert-serials/${encodeURIComponent(serial)}`, { method: 'DELETE' }),
+
+  authSettings: () => request<AuthMethodSettings>('/security/auth-settings'),
 };

@@ -1,6 +1,7 @@
 const express = require('express');
 const security = require('../services/security');
 const certSerials = require('../services/certSerials');
+const authSettings = require('../services/authSettings');
 const { release } = require('../middleware/quarantine');
 
 const MAX_LOG_LIMIT = 2000;
@@ -74,6 +75,10 @@ router.delete('/cert-serials/:serial', (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
+});
+
+router.get('/auth-settings', (req, res) => {
+  res.json(authSettings.get());
 });
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const certSerials = require('../services/certSerials');
+const authSettings = require('../services/authSettings');
 
 const CERT_SERIAL_HEADER = (process.env.CERT_SERIAL_HEADER || 'x-ssl-client-serial').toLowerCase();
 const CERT_VERIFY_HEADER = (process.env.CERT_VERIFY_HEADER || 'x-ssl-client-verify').toLowerCase();
@@ -7,9 +8,16 @@ function authEnabled() {
   return Boolean(process.env.ADMIN_USER && process.env.ADMIN_PASSWORD);
 }
 
+// Login por contraseña realmente utilizable ahora mismo: hacen falta
+// credenciales configuradas Y que el interruptor de la app no lo tenga desactivado.
+function passwordLoginAllowed() {
+  return authEnabled() && authSettings.get().allowPassword;
+}
+
 // nginx ya filtra qué números de serie llegan a la app (mTLS + su propia lista blanca);
 // aquí además comprobamos el serial contra la lista permitida (env + gestionada en la app) como segunda capa.
 function certAuthenticated(req) {
+  if (!authSettings.get().allowCert) return false;
   const serial = req.headers[CERT_SERIAL_HEADER];
   if (!serial) return false;
   const verify = req.headers[CERT_VERIFY_HEADER];
@@ -28,7 +36,10 @@ function requireAuth(req, res, next) {
     if (req.session) req.session.authenticated = true;
     return next();
   }
+  // Sin credenciales configuradas en absoluto (ni ADMIN_USER/PASSWORD): modo
+  // legacy sin restricción, igual que siempre.
   if (!authEnabled()) return next();
+  if (!passwordLoginAllowed()) return res.status(401).json({ error: 'No autenticado' });
   if (req.session && req.session.authenticated) return next();
   return res.status(401).json({ error: 'No autenticado' });
 }
@@ -44,4 +55,4 @@ function certInfo(req) {
   return { serial, label: entry ? entry.label : '' };
 }
 
-module.exports = { requireAuth, authEnabled, certAuthenticated, certInfo };
+module.exports = { requireAuth, authEnabled, passwordLoginAllowed, certAuthenticated, certInfo };
