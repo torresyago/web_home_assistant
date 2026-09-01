@@ -53,7 +53,13 @@ function certAuthenticatedAndLog(req) {
 
 function requireAuth(req, res, next) {
   if (certAuthenticatedAndLog(req)) {
-    if (req.session) req.session.authenticated = true;
+    if (req.session) {
+      req.session.authenticated = true;
+      // Un certificado autenticado siempre equivale a admin: es una identidad
+      // fuerte curada a mano en el panel de Seguridad, con acceso completo
+      // igual que siempre ha tenido.
+      req.session.role = 'admin';
+    }
     return next();
   }
   // Sin credenciales configuradas en absoluto (ni ADMIN_USER/PASSWORD): modo
@@ -62,6 +68,16 @@ function requireAuth(req, res, next) {
   if (!passwordLoginAllowed()) return res.status(401).json({ error: 'No autenticado' });
   if (req.session && req.session.authenticated) return next();
   return res.status(401).json({ error: 'No autenticado' });
+}
+
+// Restringe a usuarios con rol admin: el admin de arranque (ADMIN_USER/PASSWORD),
+// un usuario creado desde la app con role "admin", o una sesión por certificado
+// (ver arriba). En modo legacy (sin credenciales configuradas) no se aplica
+// ninguna restricción, igual que requireAuth.
+function requireAdmin(req, res, next) {
+  if (!authEnabled()) return next();
+  if (req.session && req.session.role === 'admin') return next();
+  return res.status(403).json({ error: 'Requiere permisos de administrador' });
 }
 
 // Certificado (si lo hay) que está autenticando la petición actual, con su
@@ -75,4 +91,12 @@ function certInfo(req) {
   return { serial, label: entry ? entry.label : '' };
 }
 
-module.exports = { requireAuth, authEnabled, passwordLoginAllowed, certAuthenticated, certAuthenticatedAndLog, certInfo };
+module.exports = {
+  requireAuth,
+  requireAdmin,
+  authEnabled,
+  passwordLoginAllowed,
+  certAuthenticated,
+  certAuthenticatedAndLog,
+  certInfo,
+};

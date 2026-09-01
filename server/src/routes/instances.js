@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 const ha = require('../services/haClient');
+const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -10,7 +11,7 @@ router.get('/', (req, res) => {
   res.json(instances);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   const { name, url, token, insecure } = req.body || {};
   if (!name || !url || !token) {
     return res.status(400).json({ error: 'name, url y token son obligatorios' });
@@ -29,7 +30,7 @@ router.post('/', async (req, res) => {
   res.status(201).json(instance);
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   const data = db.read();
   const instance = data.instances.find((i) => i.id === req.params.id);
   if (!instance) return res.status(404).json({ error: 'Instancia no encontrada' });
@@ -42,7 +43,7 @@ router.put('/:id', async (req, res) => {
   res.json(instance);
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireAdmin, (req, res) => {
   const data = db.read();
   const exists = data.instances.some((i) => i.id === req.params.id);
   if (!exists) return res.status(404).json({ error: 'Instancia no encontrada' });
@@ -52,7 +53,7 @@ router.delete('/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-router.post('/:id/test', async (req, res) => {
+router.post('/:id/test', requireAdmin, async (req, res) => {
   const { instances } = db.read();
   const instance = instances.find((i) => i.id === req.params.id);
   if (!instance) return res.status(404).json({ error: 'Instancia no encontrada' });
@@ -64,7 +65,7 @@ router.post('/:id/test', async (req, res) => {
   }
 });
 
-router.get('/:id/entities', async (req, res) => {
+router.get('/:id/entities', requireAdmin, async (req, res) => {
   const { instances } = db.read();
   const instance = instances.find((i) => i.id === req.params.id);
   if (!instance) return res.status(404).json({ error: 'Instancia no encontrada' });

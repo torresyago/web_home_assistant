@@ -7,6 +7,7 @@ const DB_FILE = path.join(DATA_DIR, 'db.json');
 const DEFAULT_DATA = {
   instances: [],
   devices: [],
+  users: [],
   security: { events: [], quarantine: {}, totals: { valid: 0, failed: 0 } },
 };
 

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft, KeyRound, Trash2, Lock, Pencil, Check, KeySquare } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, RotateCcw, Ban, Unlock, ArrowLeft, KeyRound, Trash2, Lock, Pencil, Check, KeySquare, Users } from 'lucide-react';
 import { api } from '../api';
 import { useLanguage } from '../i18n';
-import type { SecurityEvent, SecurityStats, QuarantineEntry, CertSerial, AuthMethodSettings } from '../types';
+import type { SecurityEvent, SecurityStats, QuarantineEntry, CertSerial, AuthMethodSettings, AppUser, UserRole } from '../types';
 import ConfirmDialog from '../components/ConfirmDialog';
 import LanguageSwitch from '../components/LanguageSwitch';
 import ThemeToggle from '../components/ThemeToggle';
@@ -56,6 +56,47 @@ function CertLabelCell({
   );
 }
 
+function UserPasswordCell({
+  userId,
+  placeholder,
+  onSave,
+}: {
+  userId: string;
+  placeholder: string;
+  onSave: (userId: string, password: string) => void;
+}) {
+  const [value, setValue] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  function commit() {
+    if (value.trim().length >= 4) {
+      onSave(userId, value.trim());
+      setValue('');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    }
+  }
+
+  return (
+    <div className="group relative">
+      <input
+        type="password"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        }}
+        placeholder={placeholder}
+        className="w-full rounded-md border border-white/10 bg-base-900/60 px-2.5 py-1.5 pr-7 text-sm text-slate-200 placeholder:text-slate-600 hover:border-white/20 focus:border-accent-500/60 focus:outline-none"
+      />
+      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:opacity-0">
+        {saved ? <Check size={14} className="text-emerald-400" /> : <KeyRound size={13} />}
+      </span>
+    </div>
+  );
+}
+
 function MiniSwitch({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
   return (
     <button
@@ -98,6 +139,12 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
   const [quarantine, setQuarantine] = useState<QuarantineEntry[]>([]);
   const [certSerials, setCertSerials] = useState<CertSerial[]>([]);
   const [authMethods, setAuthMethods] = useState<AuthMethodSettings | null>(null);
+  const [users, setUsers] = useState<AppUser[]>([]);
+  const [newUsername, setNewUsername] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('user');
+  const [userError, setUserError] = useState<string | null>(null);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<AppUser | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [newIp, setNewIp] = useState('');
   const [newMinutes, setNewMinutes] = useState(15);
@@ -107,18 +154,20 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
   const [serialError, setSerialError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [s, l, q, c, a] = await Promise.all([
+    const [s, l, q, c, a, u] = await Promise.all([
       api.securityStats(),
       api.securityLog(200),
       api.quarantineList(),
       api.certSerialsList(),
       api.authSettings(),
+      api.usersList(),
     ]);
     setStats(s);
     setLog(l);
     setQuarantine(q);
     setCertSerials(c);
     setAuthMethods(a);
+    setUsers(u);
   }, []);
 
   useEffect(() => {
@@ -195,6 +244,54 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
     } catch (err: any) {
       setSerialError(err.message);
       load();
+    }
+  }
+
+  async function handleAddUser(e: React.FormEvent) {
+    e.preventDefault();
+    setUserError(null);
+    if (!newUsername.trim() || !newUserPassword.trim()) return;
+    try {
+      await api.usersCreate({ username: newUsername.trim(), password: newUserPassword, role: newUserRole });
+      setNewUsername('');
+      setNewUserPassword('');
+      setNewUserRole('user');
+      load();
+    } catch (err: any) {
+      setUserError(err.message);
+    }
+  }
+
+  async function handleChangeUserRole(id: string, role: UserRole) {
+    setUserError(null);
+    try {
+      await api.usersUpdate(id, { role });
+      load();
+    } catch (err: any) {
+      setUserError(err.message);
+      load();
+    }
+  }
+
+  async function handleChangeUserPassword(id: string, password: string) {
+    setUserError(null);
+    try {
+      await api.usersUpdate(id, { password });
+    } catch (err: any) {
+      setUserError(err.message);
+    }
+  }
+
+  async function handleDeleteUserConfirmed() {
+    if (!confirmDeleteUser) return;
+    setUserError(null);
+    try {
+      await api.usersRemove(confirmDeleteUser.id);
+      setConfirmDeleteUser(null);
+      load();
+    } catch (err: any) {
+      setUserError(err.message);
+      setConfirmDeleteUser(null);
     }
   }
 
@@ -288,6 +385,96 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
           </div>
         </section>
       )}
+
+      <section className="mb-10">
+        <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-white">
+          <Users size={16} className="text-accent-400" /> {t('security.usersTitle')}
+        </h2>
+        <p className="mb-3 text-xs text-slate-500">{t('security.usersHint')}</p>
+        <form onSubmit={handleAddUser} className="mb-3 flex flex-wrap items-center gap-2">
+          <input
+            value={newUsername}
+            onChange={(e) => setNewUsername(e.target.value)}
+            placeholder={t('security.usernamePlaceholder')}
+            className="w-48 rounded-lg border border-white/10 bg-base-900 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+          />
+          <input
+            type="password"
+            value={newUserPassword}
+            onChange={(e) => setNewUserPassword(e.target.value)}
+            placeholder={t('security.userPasswordPlaceholder')}
+            className="w-48 rounded-lg border border-white/10 bg-base-900 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+          />
+          <select
+            value={newUserRole}
+            onChange={(e) => setNewUserRole(e.target.value as UserRole)}
+            className="rounded-lg border border-white/10 bg-base-900 px-3 py-2 text-sm text-white"
+          >
+            <option value="user">{t('security.roleUser')}</option>
+            <option value="admin">{t('security.roleAdmin')}</option>
+          </select>
+          <button
+            type="submit"
+            className="rounded-lg bg-accent-500 px-3.5 py-2 text-sm font-semibold text-base-950 hover:bg-accent-400"
+          >
+            {t('security.addUser')}
+          </button>
+        </form>
+        {userError && <p className="mb-2 text-xs text-red-400">{userError}</p>}
+
+        {users.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-white/10 py-6 text-center text-sm text-slate-500">
+            {t('security.noUsers')}
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-white/10">
+            <table className="w-full text-sm">
+              <thead className="bg-white/5 text-left text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-4 py-2">{t('security.colUsername')}</th>
+                  <th className="px-4 py-2">{t('security.colRole')}</th>
+                  <th className="px-4 py-2">{t('security.colNewPassword')}</th>
+                  <th className="px-4 py-2">{t('security.colAdded')}</th>
+                  <th className="px-4 py-2"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {users.map((u) => (
+                  <tr key={u.id}>
+                    <td className="px-4 py-2 text-slate-200">{u.username}</td>
+                    <td className="px-4 py-2">
+                      <select
+                        value={u.role}
+                        onChange={(e) => handleChangeUserRole(u.id, e.target.value as UserRole)}
+                        className="rounded-lg border border-white/10 bg-base-900 px-2 py-1 text-xs text-white"
+                      >
+                        <option value="user">{t('security.roleUser')}</option>
+                        <option value="admin">{t('security.roleAdmin')}</option>
+                      </select>
+                    </td>
+                    <td className="px-2 py-1">
+                      <UserPasswordCell
+                        userId={u.id}
+                        placeholder={t('security.newPasswordPlaceholder')}
+                        onSave={handleChangeUserPassword}
+                      />
+                    </td>
+                    <td className="px-4 py-2 text-slate-400">{formatTs(new Date(u.createdAt).getTime())}</td>
+                    <td className="px-4 py-2 text-right">
+                      <button
+                        onClick={() => setConfirmDeleteUser(u)}
+                        className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/10"
+                      >
+                        <Trash2 size={14} /> {t('security.removeUser')}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <section className="mb-10">
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
@@ -507,6 +694,15 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
           confirmLabel={t('security.resetConfirm')}
           onConfirm={handleReset}
           onCancel={() => setConfirmReset(false)}
+        />
+      )}
+
+      {confirmDeleteUser && (
+        <ConfirmDialog
+          title={t('security.deleteUserTitle')}
+          message={t('security.deleteUserMessage', { username: confirmDeleteUser.username })}
+          onConfirm={handleDeleteUserConfirmed}
+          onCancel={() => setConfirmDeleteUser(null)}
         />
       )}
     </div>

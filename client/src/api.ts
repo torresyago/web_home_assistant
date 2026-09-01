@@ -1,4 +1,4 @@
-import type { Device, DeviceStates, EntityOption, Instance, SecurityEvent, SecurityStats, QuarantineEntry, CertSerial, AuthStatus, AuthMethodSettings } from './types';
+import type { Device, DeviceStates, EntityOption, Instance, SecurityEvent, SecurityStats, QuarantineEntry, CertSerial, AuthStatus, AuthMethodSettings, AppUser } from './types';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`/api${path}`, {
@@ -71,4 +71,11 @@ export const api = {
     request<{ ok: true }>(`/security/cert-serials/${encodeURIComponent(serial)}`, { method: 'DELETE' }),
 
   authSettings: () => request<AuthMethodSettings>('/security/auth-settings'),
+
+  usersList: () => request<AppUser[]>('/users'),
+  usersCreate: (data: { username: string; password: string; role: 'admin' | 'user' }) =>
+    request<AppUser>('/users', { method: 'POST', body: JSON.stringify(data) }),
+  usersUpdate: (id: string, data: { username?: string; password?: string; role?: 'admin' | 'user' }) =>
+    request<AppUser>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  usersRemove: (id: string) => request<{ ok: true }>(`/users/${id}`, { method: 'DELETE' }),
 };

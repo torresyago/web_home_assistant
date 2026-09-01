@@ -84,6 +84,8 @@ export interface ActiveCert {
   label: string;
 }
 
+export type UserRole = 'admin' | 'user';
+
 export interface AuthStatus {
   authEnabled: boolean;
   passwordLoginAllowed: boolean;
@@ -91,11 +93,20 @@ export interface AuthStatus {
   cert: ActiveCert | null;
   ip: string;
   method: 'password' | 'cert' | 'none' | null;
+  role: UserRole | null;
+  username: string | null;
 }
 
 export interface AuthMethodSettings {
   allowPassword: boolean;
   allowCert: boolean;
+}
+
+export interface AppUser {
+  id: string;
+  username: string;
+  role: UserRole;
+  createdAt: string;
 }
 
 export const DEVICE_TYPE_KEYS: Record<DeviceType, `deviceType.${DeviceType}`> = {

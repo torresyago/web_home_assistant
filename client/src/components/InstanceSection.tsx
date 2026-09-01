@@ -8,6 +8,7 @@ export default function InstanceSection({
   instance,
   devices,
   states,
+  canManage,
   onAction,
   onEditInstance,
   onDeleteInstance,
@@ -18,6 +19,7 @@ export default function InstanceSection({
   instance: Instance;
   devices: Device[];
   states: DeviceStates;
+  canManage: boolean;
   onAction: (deviceId: string, action: string, params?: Record<string, any>) => void;
   onEditInstance: () => void;
   onDeleteInstance: () => void;
@@ -44,47 +46,49 @@ export default function InstanceSection({
             <p className="text-xs text-slate-500">{instance.url}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onAddDevice}
-            className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10"
-          >
-            <Plus size={14} /> {t('instanceSection.addDevice')}
-          </button>
-          <div className="relative">
+        {canManage && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setMenuOpen((v) => !v)}
-              className="rounded-lg p-1.5 text-slate-500 hover:bg-white/10 hover:text-slate-200"
+              onClick={onAddDevice}
+              className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10"
             >
-              <MoreVertical size={16} />
+              <Plus size={14} /> {t('instanceSection.addDevice')}
             </button>
-            {menuOpen && (
-              <div
-                className="absolute right-0 top-9 z-10 w-40 overflow-hidden rounded-lg border border-white/10 bg-base-800 shadow-xl"
-                onMouseLeave={() => setMenuOpen(false)}
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                className="rounded-lg p-1.5 text-slate-500 hover:bg-white/10 hover:text-slate-200"
               >
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onEditInstance();
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-200 hover:bg-base-700"
+                <MoreVertical size={16} />
+              </button>
+              {menuOpen && (
+                <div
+                  className="absolute right-0 top-9 z-10 w-40 overflow-hidden rounded-lg border border-white/10 bg-base-800 shadow-xl"
+                  onMouseLeave={() => setMenuOpen(false)}
                 >
-                  <Pencil size={14} /> {t('instanceSection.edit')}
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onDeleteInstance();
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-base-700"
-                >
-                  <Trash2 size={14} /> {t('instanceSection.delete')}
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onEditInstance();
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-200 hover:bg-base-700"
+                  >
+                    <Pencil size={14} /> {t('instanceSection.edit')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onDeleteInstance();
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-base-700"
+                  >
+                    <Trash2 size={14} /> {t('instanceSection.delete')}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {devices.length === 0 ? (
@@ -98,6 +102,7 @@ export default function InstanceSection({
               key={d.id}
               device={d}
               state={states[d.id]}
+              canManage={canManage}
               onAction={(action, params) => onAction(d.id, action, params)}
               onEdit={() => onEditDevice(d)}
               onDelete={() => onDeleteDevice(d)}

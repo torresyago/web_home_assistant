@@ -36,6 +36,10 @@ export default function HelpModal({ onClose }: { onClose: () => void }) {
           <h3 className="mb-1 font-semibold text-white">{t('help.section6Title')}</h3>
           <p className="text-slate-400">{t('help.section6Body')}</p>
         </div>
+        <div>
+          <h3 className="mb-1 font-semibold text-white">{t('help.section7Title')}</h3>
+          <p className="text-slate-400">{t('help.section7Body')}</p>
+        </div>
 
         <div className="border-t border-white/10 pt-3 text-center text-xs text-slate-500">
           <p>

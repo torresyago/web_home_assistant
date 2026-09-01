@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 const ha = require('../services/haClient');
 const lastSeen = require('../services/deviceLastSeen');
+const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.get('/', (req, res) => {
   res.json(devices);
 });
 
-router.post('/', (req, res) => {
+router.post('/', requireAdmin, (req, res) => {
   const { instanceId, name, entityId, deviceType, pulseDuration } = req.body || {};
   if (!instanceId || !name || !entityId || !deviceType) {
     return res.status(400).json({ error: 'instanceId, name, entityId y deviceType son obligatorios' });
@@ -39,7 +40,7 @@ router.post('/', (req, res) => {
   res.status(201).json(device);
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', requireAdmin, (req, res) => {
   const data = db.read();
   const device = data.devices.find((d) => d.id === req.params.id);
   if (!device) return res.status(404).json({ error: 'Dispositivo no encontrado' });
@@ -57,7 +58,7 @@ router.put('/:id', (req, res) => {
   res.json(device);
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireAdmin, (req, res) => {
   const data = db.read();
   const exists = data.devices.some((d) => d.id === req.params.id);
   if (!exists) return res.status(404).json({ error: 'Dispositivo no encontrado' });

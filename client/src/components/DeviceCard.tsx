@@ -41,12 +41,14 @@ const ICONS: Record<DeviceType, any> = {
 export default function DeviceCard({
   device,
   state,
+  canManage,
   onAction,
   onEdit,
   onDelete,
 }: {
   device: Device;
   state?: DeviceState;
+  canManage: boolean;
   onAction: (action: string, params?: Record<string, any>) => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -100,15 +102,17 @@ export default function DeviceCard({
               className="absolute right-0 top-9 z-10 w-36 overflow-hidden rounded-lg border border-white/10 bg-base-800 shadow-xl"
               onMouseLeave={() => setMenuOpen(false)}
             >
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  onEdit();
-                }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-200 hover:bg-base-700"
-              >
-                <Pencil size={14} /> {t('deviceCard.edit')}
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onEdit();
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-200 hover:bg-base-700"
+                >
+                  <Pencil size={14} /> {t('deviceCard.edit')}
+                </button>
+              )}
               <button
                 onClick={() => {
                   setMenuOpen(false);
@@ -118,15 +122,17 @@ export default function DeviceCard({
               >
                 <Link2 size={14} /> {t('deviceCard.endpoint')}
               </button>
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  onDelete();
-                }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-base-700"
-              >
-                <Trash2 size={14} /> {t('deviceCard.delete')}
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDelete();
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-base-700"
+                >
+                  <Trash2 size={14} /> {t('deviceCard.delete')}
+                </button>
+              )}
             </div>
           )}
         </div>

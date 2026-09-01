@@ -21,6 +21,8 @@ export default function App() {
           cert: null,
           ip: '',
           method: null,
+          role: 'admin',
+          username: null,
         })
       );
   }, []);
@@ -49,6 +51,7 @@ export default function App() {
       cert={status.cert}
       ip={status.ip}
       method={status.method}
+      role={status.role}
       onLogout={async () => {
         await api.logout();
         setStatus({ ...status, authenticated: false });
