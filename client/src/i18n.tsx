@@ -188,6 +188,9 @@ const dict = {
     'help.section6Body':
       'La sección "Métodos de acceso" del panel de Seguridad muestra si el login por contraseña y el acceso por certificado están activos o inactivos. Es solo informativo: se controla a nivel de contenedor con las variables de entorno AUTH_ALLOW_PASSWORD y AUTH_ALLOW_CERT (ambas activas por defecto) — para cambiarlo hay que editar el .env y reiniciar el contenedor, no se puede desde la web. Si desactivas el acceso por contraseña, la app deja de mostrar el formulario de login y solo entra quien tenga un certificado autorizado; debe quedar al menos un método activo.',
     'help.close': 'Cerrar',
+    'help.developedBy': 'Desarrollado por Yago Torres ·',
+    'help.version': 'Versión',
+    'help.lastUpdated': '· Actualizado el',
   },
   en: {
     'app.loading': 'Loading…',
@@ -372,6 +375,9 @@ const dict = {
     'help.section6Body':
       'The "Access methods" section of the Security panel shows whether password login and certificate access are active or inactive. It\'s informational only: it\'s controlled at the container level with the AUTH_ALLOW_PASSWORD and AUTH_ALLOW_CERT environment variables (both enabled by default) — changing it requires editing .env and restarting the container, not something you can do from the web. If you disable password login, the app stops showing the login form and only lets in someone with an authorized certificate; at least one method must stay enabled.',
     'help.close': 'Close',
+    'help.developedBy': 'Developed by Yago Torres ·',
+    'help.version': 'Version',
+    'help.lastUpdated': '· Updated on',
   },
 } as const;
 

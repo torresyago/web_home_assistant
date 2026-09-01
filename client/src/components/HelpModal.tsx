@@ -1,5 +1,8 @@
 import { useLanguage } from '../i18n';
 import Modal from './Modal';
+import pkg from '../../package.json';
+
+const REPO_URL = 'https://github.com/torresyago/web_home_assistant';
 
 export default function HelpModal({ onClose }: { onClose: () => void }) {
   const { t } = useLanguage();
@@ -32,6 +35,23 @@ export default function HelpModal({ onClose }: { onClose: () => void }) {
         <div>
           <h3 className="mb-1 font-semibold text-white">{t('help.section6Title')}</h3>
           <p className="text-slate-400">{t('help.section6Body')}</p>
+        </div>
+
+        <div className="border-t border-white/10 pt-3 text-center text-xs text-slate-500">
+          <p>
+            {t('help.developedBy')}{' '}
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-accent-400 hover:underline"
+            >
+              {REPO_URL.replace('https://', '')}
+            </a>
+          </p>
+          <p>
+            {t('help.version')} {pkg.version} · {t('help.lastUpdated')} {__BUILD_DATE__}
+          </p>
         </div>
 
         <button
