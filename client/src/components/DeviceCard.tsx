@@ -69,14 +69,12 @@ export default function DeviceCard({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <p className="truncate font-semibold text-white">{device.name}</p>
-              <span className="relative flex h-2 w-2 shrink-0" title={isOffline ? t('card.offline') : t('card.online')}>
-                {isOffline && (
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-                )}
-                <span
-                  className={`relative inline-flex h-2 w-2 rounded-full ${isOffline ? 'bg-red-500' : 'bg-emerald-500'}`}
-                />
-              </span>
+              <span
+                className={`h-2.5 w-2.5 shrink-0 animate-blink rounded-full ${
+                  isOffline ? 'bg-red-500 shadow-[0_0_6px_2px_rgba(239,68,68,0.6)]' : 'bg-emerald-500 shadow-[0_0_6px_2px_rgba(16,185,129,0.6)]'
+                }`}
+                title={isOffline ? t('card.offline') : t('card.online')}
+              />
             </div>
             <p className="break-words text-xs text-slate-500">
               {t(DEVICE_TYPE_KEYS[device.deviceType])} · {device.entityId}
