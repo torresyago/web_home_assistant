@@ -6,16 +6,14 @@ import type { Device, DeviceType, EntityOption, Instance } from '../types';
 import { DEVICE_TYPE_KEYS } from '../types';
 import { useLanguage } from '../i18n';
 
-const DEVICE_TYPES: DeviceType[] = [
-  'switch',
-  'thermostat',
-  'blind',
-  'garage_door',
-  'sensor',
-  'pulse',
-  'button',
-  'automation',
-];
+type Kind = 'device' | 'automation';
+
+const DEVICE_KIND_TYPES: DeviceType[] = ['switch', 'thermostat', 'blind', 'garage_door', 'sensor', 'pulse', 'button'];
+const AUTOMATION_DOMAINS = ['automation', 'script'];
+
+function kindOf(deviceType: DeviceType): Kind {
+  return deviceType === 'automation' ? 'automation' : 'device';
+}
 
 export default function DeviceModal({
   device,
@@ -31,6 +29,7 @@ export default function DeviceModal({
   onSaved: () => void;
 }) {
   const { t } = useLanguage();
+  const [kind, setKind] = useState<Kind>(device ? kindOf(device.deviceType) : 'device');
   const [instanceId, setInstanceId] = useState(device?.instanceId || defaultInstanceId || instances[0]?.id || '');
   const [name, setName] = useState(device?.name || '');
   const [entityId, setEntityId] = useState(device?.entityId || '');
@@ -62,11 +61,27 @@ export default function DeviceModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instanceId]);
 
+  function handleKindChange(next: Kind) {
+    if (next === kind) return;
+    setKind(next);
+    setEntityId('');
+    setSearch('');
+    setDeviceType(next === 'automation' ? 'automation' : 'switch');
+  }
+
+  const byKind = useMemo(
+    () =>
+      entities.filter((e) =>
+        kind === 'automation' ? AUTOMATION_DOMAINS.includes(e.domain) : !AUTOMATION_DOMAINS.includes(e.domain)
+      ),
+    [entities, kind]
+  );
+
   const filtered = useMemo(() => {
-    if (!search) return entities;
+    if (!search) return byKind;
     const q = search.toLowerCase();
-    return entities.filter((e) => e.friendlyName.toLowerCase().includes(q) || e.entityId.toLowerCase().includes(q));
-  }, [entities, search]);
+    return byKind.filter((e) => e.friendlyName.toLowerCase().includes(q) || e.entityId.toLowerCase().includes(q));
+  }, [byKind, search]);
 
   const showPulseDuration = deviceType === 'pulse' || deviceType === 'garage_door';
 
@@ -97,6 +112,29 @@ export default function DeviceModal({
   return (
     <Modal title={device ? t('device.edit') : t('device.add')} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <Field label={t('device.kind')}>
+          <div className="flex gap-1 rounded-lg bg-base-800 p-1 text-sm">
+            <button
+              type="button"
+              onClick={() => handleKindChange('device')}
+              className={`flex-1 rounded-md px-3 py-1.5 font-medium transition ${
+                kind === 'device' ? 'bg-base-700 text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {t('device.kindDevice')}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleKindChange('automation')}
+              className={`flex-1 rounded-md px-3 py-1.5 font-medium transition ${
+                kind === 'automation' ? 'bg-base-700 text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {t('device.kindAutomation')}
+            </button>
+          </div>
+        </Field>
+
         <Field label={t('device.instance')}>
           <select className="input" value={instanceId} onChange={(e) => setInstanceId(e.target.value)}>
             {instances.map((i) => (
@@ -162,15 +200,17 @@ export default function DeviceModal({
           <input required className="input" value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
 
-        <Field label={t('device.type')}>
-          <select className="input" value={deviceType} onChange={(e) => setDeviceType(e.target.value as DeviceType)}>
-            {DEVICE_TYPES.map((ty) => (
-              <option key={ty} value={ty}>
-                {t(DEVICE_TYPE_KEYS[ty])}
-              </option>
-            ))}
-          </select>
-        </Field>
+        {kind === 'device' && (
+          <Field label={t('device.type')}>
+            <select className="input" value={deviceType} onChange={(e) => setDeviceType(e.target.value as DeviceType)}>
+              {DEVICE_KIND_TYPES.map((ty) => (
+                <option key={ty} value={ty}>
+                  {t(DEVICE_TYPE_KEYS[ty])}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         {showPulseDuration && (
           <Field label={t('device.pulseDuration')}>

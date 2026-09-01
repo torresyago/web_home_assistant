@@ -103,6 +103,9 @@ const dict = {
 
     'device.edit': 'Editar dispositivo',
     'device.add': 'Añadir dispositivo',
+    'device.kind': 'Tipo',
+    'device.kindDevice': 'Dispositivo',
+    'device.kindAutomation': 'Automatización',
     'device.instance': 'Home Assistant',
     'device.entity': 'Entidad',
     'device.loadingEntities': 'Cargando entidades…',
@@ -296,6 +299,9 @@ const dict = {
 
     'device.edit': 'Edit device',
     'device.add': 'Add device',
+    'device.kind': 'Type',
+    'device.kindDevice': 'Device',
+    'device.kindAutomation': 'Automation',
     'device.instance': 'Home Assistant',
     'device.entity': 'Entity',
     'device.loadingEntities': 'Loading entities…',
