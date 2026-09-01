@@ -38,6 +38,7 @@ export interface DeviceState {
   state?: string;
   attributes?: Record<string, any>;
   error?: string;
+  lastSeenAt?: number | null;
 }
 
 export type DeviceStates = Record<string, DeviceState>;

@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 const ha = require('../services/haClient');
+const lastSeen = require('../services/deviceLastSeen');
 
 const router = express.Router();
 
@@ -86,12 +87,13 @@ router.get('/states/all', async (req, res) => {
         const stateMap = new Map(states.map((s) => [s.entity_id, s]));
         for (const d of instanceDevices) {
           const s = stateMap.get(d.entityId);
+          if (s && s.state !== 'unavailable') lastSeen.markSeen(d.id);
           result[d.id] = s
-            ? { state: s.state, attributes: s.attributes }
-            : { error: 'Entidad no encontrada' };
+            ? { state: s.state, attributes: s.attributes, lastSeenAt: lastSeen.getLastSeen(d.id) }
+            : { error: 'Entidad no encontrada', lastSeenAt: lastSeen.getLastSeen(d.id) };
         }
       } catch (err) {
-        for (const d of instanceDevices) result[d.id] = { error: err.message };
+        for (const d of instanceDevices) result[d.id] = { error: err.message, lastSeenAt: lastSeen.getLastSeen(d.id) };
       }
     })
   );

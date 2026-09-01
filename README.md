@@ -16,7 +16,7 @@ Aplicación web para controlar dispositivos de una o varias instancias de Home A
   - **Sensor**: lectura de solo lectura con su unidad.
   - **Pulso**: interruptor momentáneo que se apaga solo tras `pulseDuration` ms.
   - **Botón**: dispara `button.press` o `script.turn_on`.
-- Estado en vivo por sondeo cada 5 segundos, con indicador visual (bola verde parpadeante = en línea, bola roja parpadeante = sin respuesta o entidad `unavailable` en Home Assistant) en cada tarjeta.
+- Estado en vivo por sondeo cada 5 segundos, con indicador visual (bola verde parpadeante = en línea, bola roja parpadeante = sin respuesta o entidad `unavailable` en Home Assistant) en cada tarjeta. Cuando está en rojo, muestra además cuándo se vio con estado válido por última vez (dato en memoria del servidor, se reinicia con el contenedor).
 - Login opcional de un único usuario/contraseña para proteger el panel.
 - Endpoint webhook (`/api/webhook/:deviceId`) protegido con API key, pensado para integraciones externas (p. ej. Atajos de iOS) que no pueden presentar certificado de cliente.
 - Panel de seguridad: accesos válidos/fallidos (últimos 15 min, última hora, histórico), reset de estadísticas y gestión manual de IPs en cuarentena.
@@ -204,7 +204,7 @@ Web app to control devices from one or more Home Assistant instances through a v
   - **Sensor**: read-only reading with its unit.
   - **Pulse**: momentary switch that turns itself off after `pulseDuration` ms.
   - **Button**: triggers `button.press` or `script.turn_on`.
-- Live state via polling every 5 seconds, with a visual indicator (blinking green dot = online, blinking red dot = unresponsive or `unavailable` entity in Home Assistant) on each card.
+- Live state via polling every 5 seconds, with a visual indicator (blinking green dot = online, blinking red dot = unresponsive or `unavailable` entity in Home Assistant) on each card. When red, it also shows when it was last seen with a valid state (in-memory on the server, resets on container restart).
 - Optional single username/password login to protect the panel.
 - Webhook endpoint (`/api/webhook/:deviceId`) protected with an API key, for external integrations (e.g. iOS Shortcuts) that cannot present a client certificate.
 - Security panel: valid/failed access attempts (last 15 min, last hour, all time), a stats reset, and manual management of quarantined IPs.

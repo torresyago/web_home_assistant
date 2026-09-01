@@ -53,6 +53,9 @@ export default function DeviceCard({
   const [endpointOpen, setEndpointOpen] = useState(false);
   const Icon = ICONS[device.deviceType] || DoorOpen;
   const isOffline = Boolean(state?.error) || state?.state === 'unavailable';
+  const lastSeenText = state?.lastSeenAt
+    ? t('card.lastSeenAt').replace('{time}', new Date(state.lastSeenAt).toLocaleString())
+    : t('card.neverSeen');
 
   return (
     <motion.div
@@ -73,12 +76,13 @@ export default function DeviceCard({
                 className={`h-2.5 w-2.5 shrink-0 animate-blink rounded-full ${
                   isOffline ? 'bg-red-500 shadow-[0_0_6px_2px_rgba(239,68,68,0.6)]' : 'bg-emerald-500 shadow-[0_0_6px_2px_rgba(16,185,129,0.6)]'
                 }`}
-                title={isOffline ? t('card.offline') : t('card.online')}
+                title={isOffline ? lastSeenText : t('card.online')}
               />
             </div>
             <p className="break-words text-xs text-slate-500">
               {t(DEVICE_TYPE_KEYS[device.deviceType])} · {device.entityId}
             </p>
+            {isOffline && <p className="mt-0.5 text-xs text-red-400">{lastSeenText}</p>}
           </div>
         </div>
         <div className="relative">
