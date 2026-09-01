@@ -71,20 +71,22 @@ export interface QuarantineEntry {
   manual: boolean;
 }
 
+export type UserRole = 'admin' | 'user';
+
 export interface CertSerial {
   serial: string;
   label: string;
   addedAt: number | null;
   source: 'env' | 'app';
   enabled: boolean;
+  role: UserRole;
 }
 
 export interface ActiveCert {
   serial: string;
   label: string;
+  role: UserRole;
 }
-
-export type UserRole = 'admin' | 'user';
 
 export interface AuthStatus {
   authEnabled: boolean;

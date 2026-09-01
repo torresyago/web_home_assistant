@@ -55,10 +55,10 @@ function requireAuth(req, res, next) {
   if (certAuthenticatedAndLog(req)) {
     if (req.session) {
       req.session.authenticated = true;
-      // Un certificado autenticado siempre equivale a admin: es una identidad
-      // fuerte curada a mano en el panel de Seguridad, con acceso completo
-      // igual que siempre ha tenido.
-      req.session.role = 'admin';
+      // Rol asignado a este certificado en el panel de Seguridad (admin por
+      // defecto, para no cambiar el comportamiento de los certificados que
+      // ya existían antes de poder asignarles rol).
+      req.session.role = certSerials.roleOf(req.headers[CERT_SERIAL_HEADER]);
     }
     return next();
   }
@@ -88,7 +88,7 @@ function certInfo(req) {
   const serial = certSerials.normalize(req.headers[CERT_SERIAL_HEADER]);
   if (!serial) return null;
   const entry = certSerials.list().find((c) => c.serial === serial);
-  return { serial, label: entry ? entry.label : '' };
+  return { serial, label: entry ? entry.label : '', role: certSerials.roleOf(serial) };
 }
 
 module.exports = {

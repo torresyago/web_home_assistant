@@ -8,18 +8,19 @@ const router = express.Router();
 router.get('/status', (req, res) => {
   const ip = getClientIp(req);
   if (certAuthenticatedAndLog(req)) {
+    const cert = certInfo(req);
     if (req.session) {
       req.session.authenticated = true;
-      req.session.role = 'admin';
+      req.session.role = cert.role;
     }
     return res.json({
       authEnabled: authEnabled(),
       passwordLoginAllowed: passwordLoginAllowed(),
       authenticated: true,
-      cert: certInfo(req),
+      cert,
       ip,
       method: 'cert',
-      role: 'admin',
+      role: cert.role,
       username: null,
     });
   }

@@ -151,6 +151,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [newSerial, setNewSerial] = useState('');
   const [newSerialLabel, setNewSerialLabel] = useState('');
+  const [newSerialRole, setNewSerialRole] = useState<UserRole>('admin');
   const [serialError, setSerialError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -206,12 +207,24 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
     setSerialError(null);
     if (!newSerial.trim()) return;
     try {
-      await api.certSerialsAdd(newSerial.trim(), newSerialLabel.trim());
+      await api.certSerialsAdd(newSerial.trim(), newSerialLabel.trim(), newSerialRole);
       setNewSerial('');
       setNewSerialLabel('');
+      setNewSerialRole('admin');
       load();
     } catch (err: any) {
       setSerialError(err.message);
+    }
+  }
+
+  async function handleChangeCertRole(serial: string, role: UserRole) {
+    setSerialError(null);
+    try {
+      await api.certSerialsSetRole(serial, role);
+      load();
+    } catch (err: any) {
+      setSerialError(err.message);
+      load();
     }
   }
 
@@ -559,6 +572,14 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
             placeholder={t('security.certLabelPlaceholder')}
             className="w-48 rounded-lg border border-white/10 bg-base-900 px-3 py-2 text-sm text-white placeholder:text-slate-600"
           />
+          <select
+            value={newSerialRole}
+            onChange={(e) => setNewSerialRole(e.target.value as UserRole)}
+            className="rounded-lg border border-white/10 bg-base-900 px-3 py-2 text-sm text-white"
+          >
+            <option value="user">{t('security.roleUser')}</option>
+            <option value="admin">{t('security.roleAdmin')}</option>
+          </select>
           <button
             type="submit"
             className="rounded-lg bg-accent-500 px-3.5 py-2 text-sm font-semibold text-base-950 hover:bg-accent-400"
@@ -580,6 +601,7 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
                   <th className="px-4 py-2">{t('security.colActive')}</th>
                   <th className="px-4 py-2">{t('security.colSerial')}</th>
                   <th className="px-4 py-2">{t('security.colLabel')}</th>
+                  <th className="px-4 py-2">{t('security.colRole')}</th>
                   <th className="px-4 py-2">{t('security.colSource')}</th>
                   <th className="px-4 py-2">{t('security.colAdded')}</th>
                   <th className="px-4 py-2"></th>
@@ -599,6 +621,16 @@ export default function SecurityPanel({ onBack }: { onBack: () => void }) {
                         placeholder={t('security.clickToLabel')}
                         onSave={handleSaveCertLabel}
                       />
+                    </td>
+                    <td className="px-4 py-2">
+                      <select
+                        value={c.role}
+                        onChange={(e) => handleChangeCertRole(c.serial, e.target.value as UserRole)}
+                        className="rounded-lg border border-white/10 bg-base-900 px-2 py-1 text-xs text-white"
+                      >
+                        <option value="user">{t('security.roleUser')}</option>
+                        <option value="admin">{t('security.roleAdmin')}</option>
+                      </select>
                     </td>
                     <td className="px-4 py-2">
                       {c.source === 'env' ? (

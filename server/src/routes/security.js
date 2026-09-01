@@ -46,12 +46,12 @@ router.get('/cert-serials', (req, res) => {
 });
 
 router.post('/cert-serials', (req, res) => {
-  const { serial, label } = req.body || {};
+  const { serial, label, role } = req.body || {};
   if (!serial || typeof serial !== 'string') {
     return res.status(400).json({ error: 'Serial requerido' });
   }
   try {
-    const entry = certSerials.add(serial, label);
+    const entry = certSerials.add(serial, label, role);
     res.json(entry);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -59,9 +59,9 @@ router.post('/cert-serials', (req, res) => {
 });
 
 router.put('/cert-serials/:serial', (req, res) => {
-  const { label, enabled } = req.body || {};
+  const { label, enabled, role } = req.body || {};
   try {
-    certSerials.update(req.params.serial, { label, enabled });
+    certSerials.update(req.params.serial, { label, enabled, role });
     res.json({ ok: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
