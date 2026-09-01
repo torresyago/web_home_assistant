@@ -54,6 +54,71 @@ Aplicación web para controlar dispositivos de una o varias instancias de Home A
    docker compose up -d --build
    ```
 
+### Ejemplo de `docker-compose.yml`
+
+```yaml
+services:
+  ha-things:
+    build: .
+    container_name: ha-things
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SESSION_SECRET=${SESSION_SECRET:-changeme-session-secret}
+      - ADMIN_USER=${ADMIN_USER:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - AUTH_ALLOW_PASSWORD=${AUTH_ALLOW_PASSWORD:-true}
+      - AUTH_ALLOW_CERT=${AUTH_ALLOW_CERT:-true}
+      - ALLOWED_CERT_SERIALS=${ALLOWED_CERT_SERIALS:-}
+      - WEBHOOK_API_KEY=${WEBHOOK_API_KEY:-}
+      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-}
+    volumes:
+      - ha-things-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ha-things-data:
+```
+
+### Ejemplo de `.env`
+
+```bash
+# Secreto para firmar la cookie de sesión. Cámbialo por uno propio y aleatorio.
+SESSION_SECRET=changeme-session-secret
+
+# Login opcional usuario/contraseña. Déjalos vacíos para desactivar el login
+# (pensado para uso en red local de confianza o si solo usas certificado).
+ADMIN_USER=
+ADMIN_PASSWORD=
+
+# Activar/desactivar cada método de acceso a nivel de contenedor. Por defecto
+# ambos están activos. Debe quedar al menos uno activo (si desactivas los dos,
+# la app queda inaccesible). El panel de Seguridad de la app muestra el estado
+# actual de cada uno (informativo, no editable desde la web).
+AUTH_ALLOW_PASSWORD=true
+AUTH_ALLOW_CERT=true
+
+# Lista blanca de números de serie de certificado cliente (FNMT u otra CA),
+# separados por comas. nginx debe validar el certificado (mTLS) y pasar el
+# serial en la cabecera X-SSL-Client-Serial; la app comprueba además que ese
+# serial esté en esta lista antes de dar acceso. Déjala vacía para no aplicar
+# esta segunda validación.
+ALLOWED_CERT_SERIALS=04A1B2C3D4E5F60718293A4B5C6D7E8F90,04112233445566778899AABBCCDDEEFF0
+
+# Clave secreta para /api/webhook/:deviceId (uso desde Atajos de iOS u otros
+# clientes que no pueden presentar certificado de cliente). Genera una con:
+#   openssl rand -hex 32
+WEBHOOK_API_KEY=
+
+# Dominio público (sin ssl_verify_client) por el que se sirve /api/webhook,
+# usado para construir la URL mostrada en el panel. Déjalo vacío para usar
+# el mismo origen desde el que se carga la web.
+WEBHOOK_BASE_URL=
+```
+
+Ambos ficheros ya existen en el repo ([`docker-compose.yml`](docker-compose.yml), [`.env.example`](.env.example)) — esto es solo para verlos sin tener que clonar el proyecto.
+
 ### Usando la imagen ya publicada (sin clonar el código)
 
 Cada push a `main` publica automáticamente la imagen en GitHub Container Registry. Puedes desplegarla directamente sin compilar nada:
@@ -258,6 +323,71 @@ Web app to control devices from one or more Home Assistant instances through a v
    ```bash
    docker compose up -d --build
    ```
+
+#### Example `docker-compose.yml`
+
+```yaml
+services:
+  ha-things:
+    build: .
+    container_name: ha-things
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SESSION_SECRET=${SESSION_SECRET:-changeme-session-secret}
+      - ADMIN_USER=${ADMIN_USER:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - AUTH_ALLOW_PASSWORD=${AUTH_ALLOW_PASSWORD:-true}
+      - AUTH_ALLOW_CERT=${AUTH_ALLOW_CERT:-true}
+      - ALLOWED_CERT_SERIALS=${ALLOWED_CERT_SERIALS:-}
+      - WEBHOOK_API_KEY=${WEBHOOK_API_KEY:-}
+      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-}
+    volumes:
+      - ha-things-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ha-things-data:
+```
+
+#### Example `.env`
+
+```bash
+# Secret used to sign the session cookie. Replace it with your own random value.
+SESSION_SECRET=changeme-session-secret
+
+# Optional username/password login. Leave both empty to disable login
+# (intended for use on a trusted local network or when only using a certificate).
+ADMIN_USER=
+ADMIN_PASSWORD=
+
+# Enable/disable each access method at the container level. Both are enabled
+# by default. At least one must stay enabled (disabling both locks everyone
+# out). The app's Security panel shows the current status of each (read-only,
+# not editable from the web).
+AUTH_ALLOW_PASSWORD=true
+AUTH_ALLOW_CERT=true
+
+# Allow-list of client certificate serial numbers (FNMT or another CA),
+# comma-separated. nginx must validate the certificate (mTLS) and forward the
+# serial in the X-SSL-Client-Serial header; the app additionally checks that
+# the serial is in this list before granting access. Leave it empty to skip
+# this second layer of validation.
+ALLOWED_CERT_SERIALS=04A1B2C3D4E5F60718293A4B5C6D7E8F90,04112233445566778899AABBCCDDEEFF0
+
+# Secret key for /api/webhook/:deviceId (used from iOS Shortcuts or other
+# clients that cannot present a client certificate). Generate one with:
+#   openssl rand -hex 32
+WEBHOOK_API_KEY=
+
+# Public domain (without ssl_verify_client) that serves /api/webhook, used to
+# build the URL shown in the panel. Leave it empty to use the same origin the
+# web app is loaded from.
+WEBHOOK_BASE_URL=
+```
+
+Both files already exist in the repo ([`docker-compose.yml`](docker-compose.yml), [`.env.example`](.env.example)) — this is just so you can see them without cloning the project.
 
 #### Using the published image (without cloning the code)
 
