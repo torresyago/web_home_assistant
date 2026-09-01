@@ -33,7 +33,7 @@ function isQuarantined(ip) {
   return security.isQuarantined(ip);
 }
 
-function registerFailure(ip, type, method) {
+function registerFailure(ip, type, method, reason) {
   const now = Date.now();
   let entry = attempts.get(ip);
   if (!entry || now - entry.firstAt > WINDOW_MS) {
@@ -45,12 +45,12 @@ function registerFailure(ip, type, method) {
     security.quarantineIp(ip, QUARANTINE_MS / 60000, `auto: ${MAX_ATTEMPTS} intentos fallidos (${type})`, false);
   }
   attempts.set(ip, entry);
-  security.recordAttempt({ ip, type, result: 'failure', method });
+  security.recordAttempt({ ip, type, result: 'failure', method, reason });
 }
 
-function registerSuccess(ip, type, method) {
+function registerSuccess(ip, type, method, reason) {
   attempts.delete(ip);
-  security.recordAttempt({ ip, type, result: 'success', method });
+  security.recordAttempt({ ip, type, result: 'success', method, reason });
 }
 
 function release(ip) {

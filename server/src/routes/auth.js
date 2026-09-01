@@ -39,12 +39,13 @@ router.post('/login', checkQuarantine, (req, res) => {
     return res.status(403).json({ error: 'El acceso por contraseña está desactivado' });
   }
   const ip = getClientIp(req);
+  const userLabel = username ? String(username).slice(0, 60) : null;
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASSWORD) {
     req.session.authenticated = true;
-    registerSuccess(ip, 'login', 'password');
+    registerSuccess(ip, 'login', 'password', userLabel);
     return res.json({ ok: true });
   }
-  registerFailure(ip, 'login', 'password');
+  registerFailure(ip, 'login', 'password', userLabel);
   return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
 });
 
