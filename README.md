@@ -189,11 +189,63 @@ cd client
 npm run build
 ```
 
-## Estructura del proyecto
+## Arquitectura
+
+### Stack tecnológico
+
+- **Frontend**: [React 18](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/) (build/dev server) + [Tailwind CSS](https://tailwindcss.com/) (estilos) + [Framer Motion](https://www.framer.com/motion/) (animaciones) + [lucide-react](https://lucide.dev/) (iconos). Sin router ni gestor de estado externo — es una sola página con estado local de React (`useState`/`useEffect`) y un par de Contexts propios (`i18n.tsx` para idioma, `theme.tsx` para claro/oscuro).
+- **Backend**: [Node.js](https://nodejs.org/) + [Express 4](https://expressjs.com/), con [`express-session`](https://www.npmjs.com/package/express-session) para las sesiones de login y [`undici`](https://undici.nodejs.org/) como cliente HTTP para hablar con la REST API de Home Assistant.
+- **Almacenamiento**: sin base de datos — todo (instancias, dispositivos, usuarios, log de seguridad, cuarentena, certificados) se persiste en un único fichero `data/db.json`, leído/escrito de forma síncrona en cada petición. Sencillo y suficiente para el volumen de datos de una app doméstica de un solo usuario/hogar.
+- **Empaquetado**: un único `Dockerfile` multi-stage — una etapa `node:20-alpine` compila el frontend con Vite, y sus estáticos se copian dentro de la etapa final, que es el propio servidor Express (`server/public`). Resultado: **una sola imagen, un solo proceso Node, un solo contenedor**.
+- **CI/CD**: GitHub Actions construye y publica la imagen en GitHub Container Registry en cada push a `main` o tag `v*` (ver [`.github/workflows/`](.github/workflows/)).
+
+### Cómo funciona
+
+1. El navegador (o Atajos de iOS) habla siempre con el **mismo proceso Express**, tanto para pedir el HTML/JS/CSS de la SPA como para las llamadas a la API (`/api/*`) — no hay CDN ni servidor de estáticos separado.
+2. Ese proceso Express es quien, a su vez, hace las llamadas salientes a la REST API de cada instancia de Home Assistant que hayas configurado (`/api/states`, `/api/services/...`), usando el token de acceso de larga duración guardado para esa instancia.
+3. No hay WebSocket ni conexión persistente con Home Assistant: el estado de los dispositivos se refresca por **sondeo** (`GET /api/devices/states/all` cada 5 s desde el navegador).
+4. La autenticación (usuario/contraseña o certificado de cliente mTLS vía cabeceras de un proxy delante) protege las rutas `/api/*` salvo `/api/webhook/*`, que usa su propia API key en lugar de sesión — pensado para clientes que no pueden mantener una cookie de sesión, como Atajos de iOS.
+
+### Servicios que se levantan
+
+Con `docker compose up`, se levanta **un único contenedor** (`ha-things`), que corre un único proceso Node/Express escuchando en el puerto `3000` (mapeado al host). No hay base de datos, caché ni cola separadas — el propio proceso sirve tanto la API como el frontend ya compilado, y persiste sus datos en el volumen `ha-things-data`. La única pieza externa es tu(s) instancia(s) de **Home Assistant**, a la que este contenedor se conecta por HTTP(S) — no vive dentro de este `docker-compose.yml`, se configura como URL + token desde la propia app.
+
+Opcionalmente, delante de este contenedor sueles poner tu propio **reverse proxy** (nginx, Nginx Proxy Manager...) para terminar TLS y, si quieres, exigir certificado de cliente (mTLS) — ver la sección [Seguridad](#seguridad) más abajo.
+
+### Diagrama
+
+```mermaid
+flowchart LR
+    subgraph Clientes
+        Browser["Navegador<br/>(panel web)"]
+        Shortcuts["Atajos de iOS<br/>(Siri, widgets, automatizaciones)"]
+    end
+
+    subgraph Proxy["Reverse proxy (opcional)"]
+        Nginx["nginx / Nginx Proxy Manager<br/>TLS + mTLS opcional"]
+    end
+
+    subgraph Contenedor["Contenedor ha-things (Docker)"]
+        Express["Node.js + Express<br/>sirve API + frontend compilado"]
+        Vol[("Volumen ha-things-data<br/>db.json")]
+        Express --- Vol
+    end
+
+    HA1[("Home Assistant<br/>instancia 1")]
+    HA2[("Home Assistant<br/>instancia N")]
+
+    Browser -->|HTTPS, sesión/cookie| Nginx
+    Shortcuts -->|HTTPS, X-Api-Key| Nginx
+    Nginx -->|HTTP interno| Express
+    Express -->|REST API + token| HA1
+    Express -->|REST API + token| HA2
+```
+
+### Estructura del proyecto
 
 ```
 server/           API Express + almacenamiento en JSON + cliente HTTP de Home Assistant
-  src/routes/     instances, devices, actions, auth, webhook
+  src/routes/     instances, devices, actions, auth, webhook, security, users
   src/services/   haClient.js — llamadas a la REST API de Home Assistant
   data/           db.json (se crea en tiempo de ejecución; en Docker vive en el volumen)
 client/           Frontend React + Vite + Tailwind
@@ -486,11 +538,63 @@ cd client
 npm run build
 ```
 
-### Project structure
+### Architecture
+
+#### Tech stack
+
+- **Frontend**: [React 18](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/) (build/dev server) + [Tailwind CSS](https://tailwindcss.com/) (styling) + [Framer Motion](https://www.framer.com/motion/) (animations) + [lucide-react](https://lucide.dev/) (icons). No router or external state manager — it's a single page with local React state (`useState`/`useEffect`) plus a couple of custom Contexts (`i18n.tsx` for language, `theme.tsx` for light/dark).
+- **Backend**: [Node.js](https://nodejs.org/) + [Express 4](https://expressjs.com/), with [`express-session`](https://www.npmjs.com/package/express-session) for login sessions and [`undici`](https://undici.nodejs.org/) as the HTTP client talking to the Home Assistant REST API.
+- **Storage**: no database — everything (instances, devices, users, security log, quarantine, certificates) is persisted in a single `data/db.json` file, read/written synchronously on each request. Simple and sufficient for a single-household app's data volume.
+- **Packaging**: a single multi-stage `Dockerfile` — a `node:20-alpine` stage builds the frontend with Vite, and its static output is copied into the final stage, which is the Express server itself (`server/public`). Result: **one image, one Node process, one container**.
+- **CI/CD**: GitHub Actions builds and publishes the image to the GitHub Container Registry on every push to `main` or `v*` tag (see [`.github/workflows/`](.github/workflows/)).
+
+#### How it works
+
+1. The browser (or iOS Shortcuts) always talks to the **same Express process**, both to fetch the SPA's HTML/JS/CSS and for API calls (`/api/*`) — no CDN or separate static file server.
+2. That same Express process makes the outgoing calls to each configured Home Assistant instance's REST API (`/api/states`, `/api/services/...`), using that instance's stored long-lived access token.
+3. There's no WebSocket or persistent connection to Home Assistant: device state is refreshed by **polling** (`GET /api/devices/states/all` every 5s from the browser).
+4. Authentication (username/password, or client-certificate mTLS via headers from a proxy in front) protects `/api/*` routes except `/api/webhook/*`, which uses its own API key instead of a session — meant for clients that can't hold a session cookie, like iOS Shortcuts.
+
+#### Services that get started
+
+`docker compose up` starts **a single container** (`ha-things`), running one Node/Express process listening on port `3000` (mapped to the host). No separate database, cache, or queue — that same process serves both the API and the pre-built frontend, and persists its data in the `ha-things-data` volume. The only external piece is your Home Assistant instance(s), which this container connects to over HTTP(S) — it's not part of this `docker-compose.yml`, it's configured as a URL + token from within the app itself.
+
+Optionally, you'd put your own **reverse proxy** (nginx, Nginx Proxy Manager...) in front of this container to terminate TLS and, if you want, require a client certificate (mTLS) — see the [Security](#security) section below.
+
+#### Diagram
+
+```mermaid
+flowchart LR
+    subgraph Clients
+        Browser["Browser<br/>(web panel)"]
+        Shortcuts["iOS Shortcuts<br/>(Siri, widgets, automations)"]
+    end
+
+    subgraph Proxy["Reverse proxy (optional)"]
+        Nginx["nginx / Nginx Proxy Manager<br/>TLS + optional mTLS"]
+    end
+
+    subgraph Container["ha-things container (Docker)"]
+        Express["Node.js + Express<br/>serves API + built frontend"]
+        Vol[("ha-things-data volume<br/>db.json")]
+        Express --- Vol
+    end
+
+    HA1[("Home Assistant<br/>instance 1")]
+    HA2[("Home Assistant<br/>instance N")]
+
+    Browser -->|HTTPS, session/cookie| Nginx
+    Shortcuts -->|HTTPS, X-Api-Key| Nginx
+    Nginx -->|internal HTTP| Express
+    Express -->|REST API + token| HA1
+    Express -->|REST API + token| HA2
+```
+
+#### Project structure
 
 ```
 server/           Express API + JSON storage + Home Assistant HTTP client
-  src/routes/     instances, devices, actions, auth, webhook
+  src/routes/     instances, devices, actions, auth, webhook, security, users
   src/services/   haClient.js — calls to the Home Assistant REST API
   data/           db.json (created at runtime; lives in the volume under Docker)
 client/           React + Vite + Tailwind frontend
