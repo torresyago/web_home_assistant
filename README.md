@@ -4,10 +4,15 @@
 
 Aplicación web para controlar dispositivos de una o varias instancias de Home Assistant desde un panel visual, pensada para ejecutarse en Docker. El modelo de "cosas" (things) sigue la misma idea que [homebridge-homeassistant-things](https://github.com/torresyago/homebridge-homeassistant-things): defines dispositivos apuntando a una entidad de Home Assistant y un tipo de control.
 
+![Panel principal de HA Things](docs/screenshots/dashboard.png)
+
 ## Características
 
 - Añade una o varias instancias de Home Assistant (nombre, URL y token de acceso de larga duración).
 - Explora y busca las entidades de cada instancia al añadir un dispositivo, sin escribir el `entity_id` a mano.
+
+  <img src="docs/screenshots/add-device.png" alt="Añadir dispositivo, buscando una entidad" width="420">
+
 - Tipos de dispositivo soportados, cada uno con su propio control:
   - **Interruptor** (switch/light/input_boolean): toggle on/off.
   - **Termostato** (climate): temperatura actual y objetivo con +/-.
@@ -16,6 +21,9 @@ Aplicación web para controlar dispositivos de una o varias instancias de Home A
   - **Sensor**: lectura de solo lectura con su unidad.
   - **Pulso**: interruptor momentáneo que se apaga solo tras `pulseDuration` ms.
   - **Botón**: dispara `button.press` o `script.turn_on`.
+
+  <img src="docs/screenshots/edit-device.png" alt="Editar dispositivo, eligiendo tipo" width="420">
+
 - Estado en vivo por sondeo cada 5 segundos, con indicador visual (bola verde parpadeante = en línea, bola roja parpadeante = sin respuesta o entidad `unavailable` en Home Assistant) en cada tarjeta. Cuando está en rojo, muestra además cuándo se vio con estado válido por última vez (dato en memoria del servidor, se reinicia con el contenedor).
 - Login opcional de un único usuario/contraseña para proteger el panel.
 - Endpoint webhook (`/api/webhook/:deviceId`) protegido con API key, pensado para integraciones externas (p. ej. Atajos de iOS) que no pueden presentar certificado de cliente.
@@ -104,6 +112,8 @@ docker-compose.yml
 
 ## Seguridad
 
+![Panel de seguridad](docs/screenshots/security-panel.png)
+
 La app está pensada para exponerse detrás de un reverse proxy (nginx, NPM, etc.) que termine TLS. Las medidas de seguridad previstas son:
 
 - **Certificado de cliente (mTLS)**: el proxy puede exigir un certificado de cliente (ej. FNMT) y pasar el número de serie en la cabecera `X-SSL-Client-Serial` (y opcionalmente `X-SSL-Client-Verify`). La app valida esa cabecera contra una lista blanca de seriales — doble capa (proxy + app) por si el proxy cambia de configuración. Esa lista se compone de `ALLOWED_CERT_SERIALS` (variable de entorno, opcional) más los certificados gestionados desde el propio panel de Seguridad de la app (añadir/quitar sin reiniciar ni tocar el `.env`).
@@ -169,11 +179,17 @@ location /api/webhook/ {
 El endpoint de webhook permite disparar acciones (encender, apagar, pulsar, abrir/cerrar persiana, etc.) desde la app Atajos de iOS sin necesidad de certificado de cliente:
 
 1. En el panel web, abre el menú de un dispositivo (⋮) → **"Endpoint"** → pestaña **"Webhook"**. Ahí verás la URL exacta, la cabecera `X-Api-Key` ya rellenada y el cuerpo JSON correcto para ese tipo de dispositivo.
+
+   <img src="docs/screenshots/device-menu.png" alt="Menú del dispositivo" width="260"> <img src="docs/screenshots/endpoint-webhook.png" alt="Modal Endpoint para Atajos, pestaña Webhook" width="420">
+
 2. En la app Atajos, crea un atajo nuevo con la acción **"Obtener contenido de URL"**:
    - **URL**: la mostrada en el panel (`https://tu-dominio-webhook/api/webhook/<deviceId>`).
    - **Método**: `POST`.
    - **Headers**: `Content-Type: application/json` y `X-Api-Key: <tu clave>`.
    - **Request Body**: `JSON`, con el cuerpo mostrado en el panel (p. ej. `{"action":"toggle"}`).
+
+   <img src="docs/screenshots/ios-shortcuts.jpg" alt="Configuración del atajo en la app Atajos de iOS" width="300">
+
 3. Guarda el atajo. Puedes añadirlo a la pantalla de inicio, ejecutarlo por voz con Siri, o incluirlo en una automatización (llegada a casa, hora del día, etc.).
 
 Notas:
@@ -193,10 +209,15 @@ Notas:
 
 Web app to control devices from one or more Home Assistant instances through a visual panel, built to run in Docker. The "things" model follows the same idea as [homebridge-homeassistant-things](https://github.com/torresyago/homebridge-homeassistant-things): a device points to a Home Assistant entity plus a control type.
 
+![HA Things main panel](docs/screenshots/dashboard.png)
+
 ### Features
 
 - Add one or more Home Assistant instances (name, URL, and long-lived access token).
 - Browse and search each instance's entities when adding a device, no need to type the `entity_id` by hand.
+
+  <img src="docs/screenshots/add-device.png" alt="Add device, searching for an entity" width="420">
+
 - Supported device types, each with its own control:
   - **Switch** (switch/light/input_boolean): on/off toggle.
   - **Thermostat** (climate): current and target temperature with +/-.
@@ -205,6 +226,9 @@ Web app to control devices from one or more Home Assistant instances through a v
   - **Sensor**: read-only reading with its unit.
   - **Pulse**: momentary switch that turns itself off after `pulseDuration` ms.
   - **Button**: triggers `button.press` or `script.turn_on`.
+
+  <img src="docs/screenshots/edit-device.png" alt="Edit device, choosing its type" width="420">
+
 - Live state via polling every 5 seconds, with a visual indicator (blinking green dot = online, blinking red dot = unresponsive or `unavailable` entity in Home Assistant) on each card. When red, it also shows when it was last seen with a valid state (in-memory on the server, resets on container restart).
 - Optional single username/password login to protect the panel.
 - Webhook endpoint (`/api/webhook/:deviceId`) protected with an API key, for external integrations (e.g. iOS Shortcuts) that cannot present a client certificate.
@@ -293,6 +317,8 @@ docker-compose.yml
 
 ### Security
 
+![Security panel](docs/screenshots/security-panel.png)
+
 The app is meant to be exposed behind a reverse proxy (nginx, NPM, etc.) that terminates TLS. The security measures in place are:
 
 - **Client certificate (mTLS)**: the proxy can require a client certificate (e.g. FNMT/similar) and forward its serial number in the `X-SSL-Client-Serial` header (and optionally `X-SSL-Client-Verify`). The app validates that header against an allow-list — a double layer (proxy + app) in case the proxy's config changes. That list combines `ALLOWED_CERT_SERIALS` (optional env var) with the certificates managed from the app's own Security panel (add/remove without restarting or touching `.env`).
@@ -358,11 +384,17 @@ location /api/webhook/ {
 The webhook endpoint lets you trigger actions (turn on/off, press, open/close a blind, etc.) from the iOS Shortcuts app without needing a client certificate:
 
 1. In the web panel, open a device's menu (⋮) → **"Endpoint"** → **"Webhook"** tab. You'll see the exact URL, the `X-Api-Key` header already filled in, and the correct JSON body for that device type.
+
+   <img src="docs/screenshots/device-menu.png" alt="Device menu" width="260"> <img src="docs/screenshots/endpoint-webhook.png" alt="Endpoint for Shortcuts modal, Webhook tab" width="420">
+
 2. In the Shortcuts app, create a new shortcut with the **"Get Contents of URL"** action:
    - **URL**: the one shown in the panel (`https://your-webhook-domain/api/webhook/<deviceId>`).
    - **Method**: `POST`.
    - **Headers**: `Content-Type: application/json` and `X-Api-Key: <your key>`.
    - **Request Body**: `JSON`, with the body shown in the panel (e.g. `{"action":"toggle"}`).
+
+   <img src="docs/screenshots/ios-shortcuts.jpg" alt="Shortcut configuration in the iOS Shortcuts app" width="300">
+
 3. Save the shortcut. You can add it to your home screen, run it by voice with Siri, or include it in an automation (arriving home, time of day, etc.).
 
 Notes:
